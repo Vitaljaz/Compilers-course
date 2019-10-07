@@ -57,6 +57,81 @@ void Lexer::printLexemList()
 		std::cout << it.lineNumber << " - " << it.lexeme << " - " << it.tokenClass << std::endl;
 }
 
+bool Lexer::isDFA(const char ch)
+{
+	if (machineState == MachineState::NONE && charType == SymbolType::DIGIT)
+	{
+		machineState = MachineState::DIGIT;
+		return true;
+	}
+
+	if (charType == SymbolType::A_OPERATOR)
+	{
+		if (machineState == MachineState::NONE && (ch == '+' || ch == '-'))
+		{
+			machineState = MachineState::SIGN;
+			return true;
+		}
+		else if (machineState == MachineState::E && (ch == '+' || ch == '-'))
+		{
+			machineState = MachineState::L_DIGIT;
+			return true;
+		}
+	}
+	
+	if (machineState != MachineState::NONE)
+	{
+		if (machineState == MachineState::SIGN && charType == SymbolType::DIGIT)
+		{
+			machineState = MachineState::DIGIT;
+			return true;
+		}
+		else if (machineState == MachineState::DIGIT &&  charType == SymbolType::DIGIT)
+		{
+			return true;
+		}
+		else if (machineState == MachineState::DIGIT && ch == '.')
+		{
+			machineState = MachineState::DOT;
+			return true;
+		}
+		else if (machineState == MachineState::DOT && charType == SymbolType::DIGIT)
+		{
+			machineState = MachineState::M_DIGIT;
+			return true;
+		}
+		else if (machineState == MachineState::M_DIGIT && charType == SymbolType::DIGIT)
+		{
+			return true;
+		}
+		else if (machineState == MachineState::M_DIGIT && ch == 'e')
+		{
+			machineState = MachineState::E;
+			return true;
+		}
+		else if (machineState == MachineState::E && (ch == '+' || ch == '-'))
+		{
+			machineState = MachineState::L_SIGN;
+			return true;
+		}
+		else if (machineState == MachineState::L_SIGN && charType == SymbolType::DIGIT)
+		{
+			machineState = MachineState::L_DIGIT;
+			return true;
+		}
+		else if (machineState == MachineState::L_DIGIT && charType == SymbolType::DIGIT)
+		{
+			return true;
+		}
+		else if (machineState == MachineState::L_DIGIT && charType != SymbolType::DIGIT)
+		{
+			machineState = MachineState::END;
+			return false;
+		}
+	}
+	return false;
+}
+
 void Lexer::initializeHashMap()
 {
 	initializeAdditional();
@@ -76,6 +151,7 @@ void Lexer::initializeKeyWords()
 	keywords.insert(std::pair<std::string, std::string>("bool", "keyword"));
 	keywords.insert(std::pair<std::string, std::string>("true", "keyword"));
 	keywords.insert(std::pair<std::string, std::string>("false", "keyword"));
+	keywords.insert(std::pair<std::string, std::string>("return", "keyword"));
 }
 
 void Lexer::initializeAdditional()
@@ -85,10 +161,13 @@ void Lexer::initializeAdditional()
 	additional.insert(std::pair<std::string, std::string>("(", "separator"));
 	additional.insert(std::pair<std::string, std::string>(")", "separator"));
 	additional.insert(std::pair<std::string, std::string>(";", "separator"));
+	additional.insert(std::pair<std::string, std::string>(".", "separator"));
+	additional.insert(std::pair<std::string, std::string>("_", "separator"));
 	additional.insert(std::pair<std::string, std::string>("+", "arithmetic operator"));
 	additional.insert(std::pair<std::string, std::string>("-", "arithmetic operator"));
 	additional.insert(std::pair<std::string, std::string>("=", "arithmetic operator"));
 	additional.insert(std::pair<std::string, std::string>("*", "arithmetic operator"));
+	additional.insert(std::pair<std::string, std::string>("/", "aritmetic operator"));
 	additional.insert(std::pair<std::string, std::string>("%", "arithmetic operator"));
 	additional.insert(std::pair<std::string, std::string>("<", "relational operator"));
 	additional.insert(std::pair<std::string, std::string>(">", "relational operator"));
@@ -101,6 +180,7 @@ void Lexer::initializeAdditional()
 	additional.insert(std::pair<std::string, std::string>("&", "logical operator"));
 	additional.insert(std::pair<std::string, std::string>("|", "logical operator"));
 	additional.insert(std::pair<std::string, std::string>("||", "logical operator"));
+	
 }
 
 void Lexer::runAnalysis()
@@ -115,12 +195,13 @@ void Lexer::runAnalysis()
 	}
 
 	while (!fin.eof())
-	{
-		std::string line;
-		std::string lexeme;
+	{	
+		line.clear();
+		lexeme.clear();
 
-		SymbolType lexemType = SymbolType::NONE;
-		SymbolType charType  = SymbolType::NONE;
+		lexemeType = SymbolType::NONE;
+		charType  = SymbolType::NONE;
+		machineState = MachineState::NONE;
 
 		getline(fin, line);
 
@@ -131,59 +212,152 @@ void Lexer::runAnalysis()
 		{
 			if (line[i] == ' ' || line[i] == '\0' || line[i] == '\n')
 			{
-				if (lexemType != SymbolType::NONE)
+				if (lexemeType != SymbolType::NONE)
 				{
-					createToken(lexeme, lineCounter, lexemType);
+					createToken(lexeme, lineCounter, charType);
 					lexeme.clear();
-					lexemType = SymbolType::NONE;
+					lexemeType = SymbolType::NONE;
+
+					if (machineState != MachineState::NONE)
+						machineState = MachineState::NONE;
+
 					continue;
 				}
 				continue;
 			}
 
+			if (line[i] == '/' && lexeme == "/")
+			{
+				lexeme.clear();
+				lexemeType = SymbolType::NONE;
+				break;
+			}
+
 			charType = getType(line[i]);
 
-			if (lexemType == SymbolType::NONE)
+			// need fix
+			if (lexemeType == SymbolType::NONE || lexemeType == SymbolType::D_CONST)
 			{
-				lexemType = charType;
+				if (isDFA(line[i]))
+				{
+					if (!lexeme.empty() && machineState == MachineState::SIGN)
+					{
+						createToken(lexeme, lineCounter, charType);
+						lexeme.clear();
+					}
+					lexemeType = SymbolType::D_CONST;
+					lexeme += line[i];
+					continue;
+				}
+				else
+				{
+					if (machineState != MachineState::NONE)
+					{
+						createToken(lexeme, lineCounter, charType);
+						lexeme.clear();
+						lexeme += line[i];
+						lexemeType = charType;
+						machineState = MachineState::NONE;
+						continue;
+					}
+				}
+			}
+
+
+			if (lexemeType == SymbolType::NONE)
+			{
+				lexemeType = charType;
 				lexeme += line[i];
 				continue;
 			}
 
-			if (lexemType == SymbolType::LETTER && charType == SymbolType::DIGIT)
+			if (lexemeType == SymbolType::LETTER && charType == SymbolType::DIGIT)
 			{
 				lexeme += line[i];
-				lexemType = SymbolType::LETTER;
+				lexemeType = SymbolType::LETTER;
 				continue;
 			}
 
-			if ((lexemType == charType) && (charType == SymbolType::DIGIT))
+			if ((lexemeType == charType) && (charType == SymbolType::DIGIT))
 			{
 				lexeme += line[i];
 				continue;
 			}
-			else if ((lexemType == charType) && (charType == SymbolType::LETTER))
+			else if ((lexemeType == charType) && (charType == SymbolType::LETTER))
 			{
 				lexeme += line[i];
 				continue;
 			}
 
-			if (lexemType != charType)
+			if (lexemeType != charType)
 			{
-				createToken(lexeme, lineCounter, lexemType);
+				createToken(lexeme, lineCounter, charType);
 				lexeme.clear();
 				lexeme += line[i];
-				lexemType = charType;
+				lexemeType = charType;
 				continue;
 			}
 		}
-
 		lineCounter++;
 	}
 }
 
-void Lexer::createToken(const std::string t_lexeme, int line, SymbolType type)
+void Lexer::createToken(std::string& t_lexeme, unsigned int line, SymbolType type)
 {
+	if (machineState != MachineState::NONE)
+	{
+		if (machineState == MachineState::DIGIT)
+		{
+			std::string LType = getLexemeClass(t_lexeme);
+			Token token = { t_lexeme, "digit", line };
+			tokenList.push_back(token);
+			return;
+		}
+		else if (machineState == MachineState::DIGIT)
+		{
+			Token token = { t_lexeme, "digit", line };
+			tokenList.push_back(token);
+			return;
+		}
+		else if (machineState == MachineState::DOT)
+		{
+			t_lexeme += "0";
+			Token token = { t_lexeme, "digit", line };
+			tokenList.push_back(token);
+			return;
+		}
+		else if (machineState == MachineState::M_DIGIT)
+		{
+			Token token = { t_lexeme, "digit", line };
+			tokenList.push_back(token);
+			return;
+		}
+		else if (machineState == MachineState::E)
+		{
+			Token token = { t_lexeme, "exponential notation", line };
+			tokenList.push_back(token);
+			return;
+		}
+		else if (machineState == MachineState::L_SIGN)
+		{
+			Token token = { t_lexeme, "exponential notation", line };
+			tokenList.push_back(token);
+			return;
+		}
+		else if (machineState == MachineState::L_DIGIT)
+		{
+			Token token = { t_lexeme, "exponential notation", line };
+			tokenList.push_back(token);
+			return;
+		}
+		else if (machineState == MachineState::END)
+		{
+			Token token = { t_lexeme, "exponential notation", line };
+			tokenList.push_back(token);
+			return;
+		}
+	}
+
 	if (type == SymbolType::DIGIT)
 	{
 		Token token = { t_lexeme, "digit", line };
@@ -197,7 +371,7 @@ void Lexer::createToken(const std::string t_lexeme, int line, SymbolType type)
 	}
 }
 
-Lexer::Lexer(std::string fileName_)
+Lexer::Lexer(const std::string& fileName_)
 {
 	fileName = fileName_;
 	initializeHashMap();
