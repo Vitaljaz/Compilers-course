@@ -32,6 +32,13 @@ enum class MachineState : int
 
 class Lexer
 {
+public:
+	Lexer() = delete;
+	Lexer(const std::string& fileName_);
+	void printLexemList();
+
+	~Lexer() = default;
+
 private:
 	struct Token
 	{
@@ -40,36 +47,28 @@ private:
 		unsigned int lineNumber;
 	};
 
+	unsigned int lineCounter = 1;
+
 	std::map<std::string, std::string> keywords;
 	std::map<std::string, std::string> additional;
-
 	std::vector<Token> tokenList;
 
 	std::string fileName;
 	std::string line;
 	std::string lexeme;
 
-
 	SymbolType lexemeType;
 	SymbolType charType;
 
 	MachineState machineState = MachineState::NONE;
-	unsigned int lineCounter = 1;
 
-	SymbolType getType(const char ch);
-	std::string getLexemeClass(std::string lexeme);
+	const SymbolType& getType(const char ch);
+	const std::string& getLexemeClass(const std::string& lexeme);
 	
-	bool isDFA(const char ch);
+	void runAnalysis();
 	void initializeHashMap();
 	void initializeKeyWords();
 	void initializeAdditional();
-	void runAnalysis();
 	void createToken(std::string& t_lexeme, unsigned int line, SymbolType type);
-
-public:
-	Lexer() = delete;
-	Lexer(const std::string& fileName_);
-	void printLexemList();
-	
-	~Lexer() = default;
+	bool isDFA(const char ch);
 };

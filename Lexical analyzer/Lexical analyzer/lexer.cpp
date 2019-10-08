@@ -1,6 +1,70 @@
 #include "lexer.h"
 
-SymbolType Lexer::getType(const char ch)
+Lexer::Lexer(const std::string& fileName_)
+{
+	fileName = fileName_;
+	initializeHashMap();
+	runAnalysis();
+}
+
+void Lexer::printLexemList()
+{
+	std::cout << "Lexems: " << tokenList.size() << std::endl;
+	for (auto& it : tokenList)
+		std::cout << it.lineNumber << " - " << it.lexeme << " - " << it.tokenClass << std::endl;
+}
+
+void Lexer::initializeHashMap()
+{
+	initializeAdditional();
+	initializeKeyWords();
+}
+
+void Lexer::initializeKeyWords()
+{
+	keywords.insert(std::pair<std::string, std::string>("if", "keyword"));
+	keywords.insert(std::pair<std::string, std::string>("for", "keyword"));
+	keywords.insert(std::pair<std::string, std::string>("while", "keyword"));
+	keywords.insert(std::pair<std::string, std::string>("break", "keyword"));
+	keywords.insert(std::pair<std::string, std::string>("continue", "keyword"));
+	keywords.insert(std::pair<std::string, std::string>("int", "keyword"));
+	keywords.insert(std::pair<std::string, std::string>("double", "keyword"));
+	keywords.insert(std::pair<std::string, std::string>("float", "keyword"));
+	keywords.insert(std::pair<std::string, std::string>("bool", "keyword"));
+	keywords.insert(std::pair<std::string, std::string>("true", "keyword"));
+	keywords.insert(std::pair<std::string, std::string>("false", "keyword"));
+	keywords.insert(std::pair<std::string, std::string>("return", "keyword"));
+}
+
+void Lexer::initializeAdditional()
+{
+	additional.insert(std::pair<std::string, std::string>("{", "separator"));
+	additional.insert(std::pair<std::string, std::string>("}", "separator"));
+	additional.insert(std::pair<std::string, std::string>("(", "separator"));
+	additional.insert(std::pair<std::string, std::string>(")", "separator"));
+	additional.insert(std::pair<std::string, std::string>(";", "separator"));
+	additional.insert(std::pair<std::string, std::string>(".", "separator"));
+	additional.insert(std::pair<std::string, std::string>("_", "separator"));
+	additional.insert(std::pair<std::string, std::string>("+", "arithmetic operator"));
+	additional.insert(std::pair<std::string, std::string>("-", "arithmetic operator"));
+	additional.insert(std::pair<std::string, std::string>("=", "arithmetic operator"));
+	additional.insert(std::pair<std::string, std::string>("*", "arithmetic operator"));
+	additional.insert(std::pair<std::string, std::string>("/", "aritmetic operator"));
+	additional.insert(std::pair<std::string, std::string>("%", "arithmetic operator"));
+	additional.insert(std::pair<std::string, std::string>("<", "relational operator"));
+	additional.insert(std::pair<std::string, std::string>(">", "relational operator"));
+	additional.insert(std::pair<std::string, std::string>(">=", "relational operator"));
+	additional.insert(std::pair<std::string, std::string>("<=", "relational operator"));
+	additional.insert(std::pair<std::string, std::string>("!=", "relational operator"));
+	additional.insert(std::pair<std::string, std::string>("!", "relational operator"));
+	additional.insert(std::pair<std::string, std::string>("==", "relational operator"));
+	additional.insert(std::pair<std::string, std::string>("&&", "logical operator"));
+	additional.insert(std::pair<std::string, std::string>("&", "logical operator"));
+	additional.insert(std::pair<std::string, std::string>("|", "logical operator"));
+	additional.insert(std::pair<std::string, std::string>("||", "logical operator"));
+}
+
+const SymbolType& Lexer::getType(const char ch)
 {
 	if (isdigit(ch))
 	{
@@ -34,7 +98,7 @@ SymbolType Lexer::getType(const char ch)
 	return SymbolType();
 }
 
-std::string Lexer::getLexemeClass(std::string lexeme)
+const std::string& Lexer::getLexemeClass(const std::string& lexeme)
 {
 	auto it = keywords.find(lexeme);
 	if (it != keywords.end())
@@ -48,13 +112,6 @@ std::string Lexer::getLexemeClass(std::string lexeme)
 	}
 
 	return "identifier";
-}
-
-void Lexer::printLexemList()
-{
-	std::cout << "Lexems: " << tokenList.size() << std::endl;
-	for (auto it : tokenList)
-		std::cout << it.lineNumber << " - " << it.lexeme << " - " << it.tokenClass << std::endl;
 }
 
 bool Lexer::isDFA(const char ch)
@@ -132,184 +189,14 @@ bool Lexer::isDFA(const char ch)
 	return false;
 }
 
-void Lexer::initializeHashMap()
-{
-	initializeAdditional();
-	initializeKeyWords();
-}
-
-void Lexer::initializeKeyWords()
-{
-	keywords.insert(std::pair<std::string, std::string>("if", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("for", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("while", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("break", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("continue", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("int", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("double", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("float", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("bool", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("true", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("false", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("return", "keyword"));
-}
-
-void Lexer::initializeAdditional()
-{
-	additional.insert(std::pair<std::string, std::string>("{", "separator"));
-	additional.insert(std::pair<std::string, std::string>("}", "separator"));
-	additional.insert(std::pair<std::string, std::string>("(", "separator"));
-	additional.insert(std::pair<std::string, std::string>(")", "separator"));
-	additional.insert(std::pair<std::string, std::string>(";", "separator"));
-	additional.insert(std::pair<std::string, std::string>(".", "separator"));
-	additional.insert(std::pair<std::string, std::string>("_", "separator"));
-	additional.insert(std::pair<std::string, std::string>("+", "arithmetic operator"));
-	additional.insert(std::pair<std::string, std::string>("-", "arithmetic operator"));
-	additional.insert(std::pair<std::string, std::string>("=", "arithmetic operator"));
-	additional.insert(std::pair<std::string, std::string>("*", "arithmetic operator"));
-	additional.insert(std::pair<std::string, std::string>("/", "aritmetic operator"));
-	additional.insert(std::pair<std::string, std::string>("%", "arithmetic operator"));
-	additional.insert(std::pair<std::string, std::string>("<", "relational operator"));
-	additional.insert(std::pair<std::string, std::string>(">", "relational operator"));
-	additional.insert(std::pair<std::string, std::string>(">=", "relational operator"));
-	additional.insert(std::pair<std::string, std::string>("<=", "relational operator"));
-	additional.insert(std::pair<std::string, std::string>("!=", "relational operator"));
-	additional.insert(std::pair<std::string, std::string>("!", "relational operator"));
-	additional.insert(std::pair<std::string, std::string>("==", "relational operator"));
-	additional.insert(std::pair<std::string, std::string>("&&", "logical operator"));
-	additional.insert(std::pair<std::string, std::string>("&", "logical operator"));
-	additional.insert(std::pair<std::string, std::string>("|", "logical operator"));
-	additional.insert(std::pair<std::string, std::string>("||", "logical operator"));
-	
-}
-
-void Lexer::runAnalysis()
-{
-	std::ifstream fin;
-	fin.open(fileName);
-
-	if (!fin.is_open())
-	{
-		std::cout << "File not found.\n";
-		return;
-	}
-
-	while (!fin.eof())
-	{	
-		line.clear();
-		lexeme.clear();
-
-		lexemeType = SymbolType::NONE;
-		charType  = SymbolType::NONE;
-		machineState = MachineState::NONE;
-
-		getline(fin, line);
-
-		if (line.size() == 0)
-			continue;
-
-		for (size_t i = 0; i <= line.size(); ++i)
-		{
-			if (line[i] == ' ' || line[i] == '\0' || line[i] == '\n')
-			{
-				if (lexemeType != SymbolType::NONE)
-				{
-					createToken(lexeme, lineCounter, charType);
-					lexeme.clear();
-					lexemeType = SymbolType::NONE;
-
-					if (machineState != MachineState::NONE)
-						machineState = MachineState::NONE;
-
-					continue;
-				}
-				continue;
-			}
-
-			if (line[i] == '/' && lexeme == "/")
-			{
-				lexeme.clear();
-				lexemeType = SymbolType::NONE;
-				break;
-			}
-
-			charType = getType(line[i]);
-
-			// need fix
-			if (lexemeType == SymbolType::NONE || lexemeType == SymbolType::D_CONST)
-			{
-				if (isDFA(line[i]))
-				{
-					if (!lexeme.empty() && machineState == MachineState::SIGN)
-					{
-						createToken(lexeme, lineCounter, charType);
-						lexeme.clear();
-					}
-					lexemeType = SymbolType::D_CONST;
-					lexeme += line[i];
-					continue;
-				}
-				else
-				{
-					if (machineState != MachineState::NONE)
-					{
-						createToken(lexeme, lineCounter, charType);
-						lexeme.clear();
-						lexeme += line[i];
-						lexemeType = charType;
-						machineState = MachineState::NONE;
-						continue;
-					}
-				}
-			}
-
-
-			if (lexemeType == SymbolType::NONE)
-			{
-				lexemeType = charType;
-				lexeme += line[i];
-				continue;
-			}
-
-			if (lexemeType == SymbolType::LETTER && charType == SymbolType::DIGIT)
-			{
-				lexeme += line[i];
-				lexemeType = SymbolType::LETTER;
-				continue;
-			}
-
-			if ((lexemeType == charType) && (charType == SymbolType::DIGIT))
-			{
-				lexeme += line[i];
-				continue;
-			}
-			else if ((lexemeType == charType) && (charType == SymbolType::LETTER))
-			{
-				lexeme += line[i];
-				continue;
-			}
-
-			if (lexemeType != charType)
-			{
-				createToken(lexeme, lineCounter, charType);
-				lexeme.clear();
-				lexeme += line[i];
-				lexemeType = charType;
-				continue;
-			}
-		}
-		lineCounter++;
-	}
-}
-
 void Lexer::createToken(std::string& t_lexeme, unsigned int line, SymbolType type)
 {
 	if (machineState != MachineState::NONE)
 	{
-		if (machineState == MachineState::DIGIT)
+		if (machineState == MachineState::SIGN)
 		{
 			std::string LType = getLexemeClass(t_lexeme);
-			Token token = { t_lexeme, "digit", line };
+			Token token = { t_lexeme, LType, line };
 			tokenList.push_back(token);
 			return;
 		}
@@ -371,9 +258,119 @@ void Lexer::createToken(std::string& t_lexeme, unsigned int line, SymbolType typ
 	}
 }
 
-Lexer::Lexer(const std::string& fileName_)
+void Lexer::runAnalysis()
 {
-	fileName = fileName_;
-	initializeHashMap();
-	runAnalysis();
+	std::ifstream fin;
+	fin.open(fileName);
+
+	if (!fin.is_open())
+	{
+		std::cout << "File not found.\n";
+		return;
+	}
+
+	while (!fin.eof())
+	{
+		line.clear();
+		lexeme.clear();
+
+		lexemeType = SymbolType::NONE;
+		charType = SymbolType::NONE;
+		machineState = MachineState::NONE;
+
+		getline(fin, line);
+
+		if (line.size() == 0)
+			continue;
+
+		for (size_t i = 0; i <= line.size(); ++i)
+		{
+			if (line[i] == ' ' || line[i] == '\0' || line[i] == '\n')
+			{
+				if (lexemeType != SymbolType::NONE)
+				{
+					createToken(lexeme, lineCounter, charType);
+					lexeme.clear();
+					lexemeType = SymbolType::NONE;
+
+					if (machineState != MachineState::NONE)
+						machineState = MachineState::NONE;
+
+					continue;
+				}
+				continue;
+			}
+
+			if (line[i] == '/' && lexeme == "/")
+			{
+				lexeme.clear();
+				lexemeType = SymbolType::NONE;
+				break;
+			}
+
+			charType = getType(line[i]);
+
+			if (lexemeType == SymbolType::NONE || lexemeType == SymbolType::D_CONST)
+			{
+				if (isDFA(line[i]))
+				{
+					if (!lexeme.empty() && machineState == MachineState::SIGN)
+					{
+						createToken(lexeme, lineCounter, charType);
+						lexeme.clear();
+					}
+					lexemeType = SymbolType::D_CONST;
+					lexeme += line[i];
+					continue;
+				}
+				else
+				{
+					if (machineState != MachineState::NONE)
+					{
+						createToken(lexeme, lineCounter, charType);
+						lexeme.clear();
+						lexeme += line[i];
+						lexemeType = charType;
+						machineState = MachineState::NONE;
+						continue;
+					}
+				}
+			}
+
+			if (lexemeType == SymbolType::NONE)
+			{
+				lexemeType = charType;
+				lexeme += line[i];
+				continue;
+			}
+
+			if (lexemeType == SymbolType::LETTER && charType == SymbolType::DIGIT)
+			{
+				lexeme += line[i];
+				lexemeType = SymbolType::LETTER;
+				continue;
+			}
+
+			if ((lexemeType == charType) && (charType == SymbolType::DIGIT))
+			{
+				lexeme += line[i];
+				continue;
+			}
+			else if ((lexemeType == charType) && (charType == SymbolType::LETTER))
+			{
+				lexeme += line[i];
+				continue;
+			}
+
+			if (lexemeType != charType)
+			{
+				createToken(lexeme, lineCounter, lexemeType);
+				lexeme.clear();
+				lexeme += line[i];
+				lexemeType = charType;
+				continue;
+			}
+		}
+		lineCounter++;
+	}
 }
