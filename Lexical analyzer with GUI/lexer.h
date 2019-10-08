@@ -44,7 +44,6 @@ public:
 	Lexer() = delete;
     Lexer(const QString& fileName_);
 
-	void printLexemList();
 	std::vector<Token> & getTokenList();
 
 	~Lexer() = default;

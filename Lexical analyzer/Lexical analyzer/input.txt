@@ -1,4 +1,7 @@
-if {break}; // int double float
-+03a 43s 5; 0z. 5_
-int5 5int 
-+10e5.13
+aa/ some test int 123
+321free 123return 
+double;;;;;;
+next9999
++10.034e+412;//423
+pof
+___43123m_123

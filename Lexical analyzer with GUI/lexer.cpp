@@ -12,13 +12,6 @@ Lexer::Lexer(const QString& fileName_)
 	runAnalysis();
 }
 
-void Lexer::printLexemList()
-{
-	std::cout << "Lexems: " << tokenList.size() << std::endl;
-	for (auto& it : tokenList)
-		std::cout << it.lineNumber << " - " << it.lexeme << " - " << it.tokenClass << std::endl;
-}
-
 std::vector<Token>& Lexer::getTokenList()
 {
 	return tokenList;
@@ -60,7 +53,7 @@ void Lexer::initializeAdditional()
 	additional.insert(std::pair<std::string, std::string>("-", "arithmetic operator"));
 	additional.insert(std::pair<std::string, std::string>("=", "arithmetic operator"));
 	additional.insert(std::pair<std::string, std::string>("*", "arithmetic operator"));
-	additional.insert(std::pair<std::string, std::string>("/", "aritmetic operator"));
+    additional.insert(std::pair<std::string, std::string>("/", "arithmetic operator"));
 	additional.insert(std::pair<std::string, std::string>("%", "arithmetic operator"));
 	additional.insert(std::pair<std::string, std::string>("<", "relational operator"));
 	additional.insert(std::pair<std::string, std::string>(">", "relational operator"));
@@ -354,16 +347,13 @@ void Lexer::runAnalysis()
 				lexeme += line[i];
 				continue;
 			}
-
-			if (lexemeType == SymbolType::LETTER && charType == SymbolType::DIGIT)
+            else if (lexemeType == SymbolType::LETTER && charType == SymbolType::DIGIT)
 			{
-				
 				lexeme += line[i];
 				lexemeType = SymbolType::LETTER;
 				continue;
 			}
-
-			if ((lexemeType == charType) && (charType == SymbolType::DIGIT))
+            else if ((lexemeType == charType) && (charType == SymbolType::DIGIT))
 			{
 				lexeme += line[i];
 				continue;
@@ -373,8 +363,7 @@ void Lexer::runAnalysis()
 				lexeme += line[i];
 				continue;
 			}
-
-			if (lexemeType != charType)
+            else if (lexemeType == charType || lexemeType != charType)
 			{
 				createToken(lexeme, lineCounter, lexemeType);
 				lexeme.clear();
