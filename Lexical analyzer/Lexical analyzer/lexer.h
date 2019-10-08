@@ -30,6 +30,13 @@ enum class MachineState : int
 	END       // finish state
 };
 
+struct Token
+{
+	std::string lexeme;
+	std::string tokenClass;
+	unsigned int lineNumber;
+};
+
 class Lexer
 {
 public:
@@ -37,17 +44,11 @@ public:
 	Lexer(const std::string& fileName_);
 
 	void printLexemList();
+	std::vector<Token> & getTokenList();
 
 	~Lexer() = default;
 
 private:
-	struct Token
-	{
-		std::string lexeme;
-		std::string tokenClass;
-		unsigned int lineNumber;
-	};
-
 	unsigned int lineCounter = 1;
 
 	std::map<std::string, std::string> keywords;

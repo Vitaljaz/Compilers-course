@@ -14,6 +14,11 @@ void Lexer::printLexemList()
 		std::cout << it.lineNumber << " - " << it.lexeme << " - " << it.tokenClass << std::endl;
 }
 
+std::vector<Token>& Lexer::getTokenList()
+{
+	return tokenList;
+}
+
 void Lexer::initializeHashMap()
 {
 	initializeAdditional();
