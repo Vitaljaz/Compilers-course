@@ -64,7 +64,7 @@ private:
 
 	MachineState machineState = MachineState::NONE;
 
-	const SymbolType& getType(const char ch);
+	SymbolType getType(const char ch);
 	std::string getLexemeClass(const std::string& lexeme);
 	
 	void runAnalysis();

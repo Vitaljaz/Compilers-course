@@ -70,7 +70,7 @@ void Lexer::initializeAdditional()
 	additional.insert(std::pair<std::string, std::string>("||", "logical operator"));
 }
 
-const SymbolType& Lexer::getType(const char ch)
+SymbolType Lexer::getType(const char ch)
 {
 	if (isdigit(ch))
 	{
