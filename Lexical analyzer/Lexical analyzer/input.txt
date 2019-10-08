@@ -1,11 +1,4 @@
-if break // adsasd0asd sadd asd a
-soft 
-like
-123a;
-b65;
-+b
-{ 123a123}
-123{ {123
-10.6e
-
-123
+if {break}; // int double float
++03a 43s 5; 0z. 5_
+int5 5int 
++10e5.13

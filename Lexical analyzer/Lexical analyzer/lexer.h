@@ -35,6 +35,7 @@ class Lexer
 public:
 	Lexer() = delete;
 	Lexer(const std::string& fileName_);
+
 	void printLexemList();
 
 	~Lexer() = default;
@@ -63,7 +64,7 @@ private:
 	MachineState machineState = MachineState::NONE;
 
 	const SymbolType& getType(const char ch);
-	const std::string& getLexemeClass(const std::string& lexeme);
+	std::string getLexemeClass(const std::string& lexeme);
 	
 	void runAnalysis();
 	void initializeHashMap();

@@ -29,6 +29,7 @@ void Lexer::initializeKeyWords()
 	keywords.insert(std::pair<std::string, std::string>("continue", "keyword"));
 	keywords.insert(std::pair<std::string, std::string>("int", "keyword"));
 	keywords.insert(std::pair<std::string, std::string>("double", "keyword"));
+	keywords.insert(std::pair<std::string, std::string>("char", "keyword"));
 	keywords.insert(std::pair<std::string, std::string>("float", "keyword"));
 	keywords.insert(std::pair<std::string, std::string>("bool", "keyword"));
 	keywords.insert(std::pair<std::string, std::string>("true", "keyword"));
@@ -98,7 +99,7 @@ const SymbolType& Lexer::getType(const char ch)
 	return SymbolType();
 }
 
-const std::string& Lexer::getLexemeClass(const std::string& lexeme)
+std::string Lexer::getLexemeClass(const std::string& lexeme)
 {
 	auto it = keywords.find(lexeme);
 	if (it != keywords.end())
@@ -289,7 +290,7 @@ void Lexer::runAnalysis()
 			{
 				if (lexemeType != SymbolType::NONE)
 				{
-					createToken(lexeme, lineCounter, charType);
+					createToken(lexeme, lineCounter, lexemeType);
 					lexeme.clear();
 					lexemeType = SymbolType::NONE;
 
@@ -346,6 +347,7 @@ void Lexer::runAnalysis()
 
 			if (lexemeType == SymbolType::LETTER && charType == SymbolType::DIGIT)
 			{
+				
 				lexeme += line[i];
 				lexemeType = SymbolType::LETTER;
 				continue;
