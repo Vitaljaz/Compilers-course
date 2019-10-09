@@ -25,47 +25,50 @@ void Lexer::initializeHashMap()
 
 void Lexer::initializeKeyWords()
 {
-	keywords.insert(std::pair<std::string, std::string>("if", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("for", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("while", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("break", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("continue", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("int", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("double", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("char", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("float", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("bool", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("true", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("false", "keyword"));
-	keywords.insert(std::pair<std::string, std::string>("return", "keyword"));
+    keywords.insert(std::pair<std::string, std::string>("if", "keyword"));
+    keywords.insert(std::pair<std::string, std::string>("for", "keyword"));
+    keywords.insert(std::pair<std::string, std::string>("while", "keyword"));
+    keywords.insert(std::pair<std::string, std::string>("break", "keyword"));
+    keywords.insert(std::pair<std::string, std::string>("continue", "keyword"));
+    keywords.insert(std::pair<std::string, std::string>("int", "keyword"));
+    keywords.insert(std::pair<std::string, std::string>("double", "keyword"));
+    keywords.insert(std::pair<std::string, std::string>("char", "keyword"));
+    keywords.insert(std::pair<std::string, std::string>("float", "keyword"));
+    keywords.insert(std::pair<std::string, std::string>("bool", "keyword"));
+    keywords.insert(std::pair<std::string, std::string>("true", "keyword"));
+    keywords.insert(std::pair<std::string, std::string>("false", "keyword"));
+    keywords.insert(std::pair<std::string, std::string>("return", "keyword"));
 }
 
 void Lexer::initializeAdditional()
 {
-	additional.insert(std::pair<std::string, std::string>("{", "separator"));
-	additional.insert(std::pair<std::string, std::string>("}", "separator"));
-	additional.insert(std::pair<std::string, std::string>("(", "separator"));
-	additional.insert(std::pair<std::string, std::string>(")", "separator"));
-	additional.insert(std::pair<std::string, std::string>(";", "separator"));
-	additional.insert(std::pair<std::string, std::string>(".", "separator"));
-	additional.insert(std::pair<std::string, std::string>("_", "separator"));
-	additional.insert(std::pair<std::string, std::string>("+", "arithmetic operator"));
-	additional.insert(std::pair<std::string, std::string>("-", "arithmetic operator"));
-	additional.insert(std::pair<std::string, std::string>("=", "arithmetic operator"));
-	additional.insert(std::pair<std::string, std::string>("*", "arithmetic operator"));
+    additional.insert(std::pair<std::string, std::string>("{", "separator"));
+    additional.insert(std::pair<std::string, std::string>("}", "separator"));
+    additional.insert(std::pair<std::string, std::string>("(", "separator"));
+    additional.insert(std::pair<std::string, std::string>(")", "separator"));
+    additional.insert(std::pair<std::string, std::string>(";", "separator"));
+    additional.insert(std::pair<std::string, std::string>(".", "separator"));
+    additional.insert(std::pair<std::string, std::string>(",", "separator"));
+    additional.insert(std::pair<std::string, std::string>("_", "separator"));
+    additional.insert(std::pair<std::string, std::string>("+", "arithmetic operator"));
+    additional.insert(std::pair<std::string, std::string>("-", "arithmetic operator"));
+    additional.insert(std::pair<std::string, std::string>("=", "arithmetic operator"));
+    additional.insert(std::pair<std::string, std::string>("*", "arithmetic operator"));
     additional.insert(std::pair<std::string, std::string>("/", "arithmetic operator"));
-	additional.insert(std::pair<std::string, std::string>("%", "arithmetic operator"));
-	additional.insert(std::pair<std::string, std::string>("<", "relational operator"));
-	additional.insert(std::pair<std::string, std::string>(">", "relational operator"));
-	additional.insert(std::pair<std::string, std::string>(">=", "relational operator"));
-	additional.insert(std::pair<std::string, std::string>("<=", "relational operator"));
-	additional.insert(std::pair<std::string, std::string>("!=", "relational operator"));
-	additional.insert(std::pair<std::string, std::string>("!", "relational operator"));
-	additional.insert(std::pair<std::string, std::string>("==", "relational operator"));
-	additional.insert(std::pair<std::string, std::string>("&&", "logical operator"));
-	additional.insert(std::pair<std::string, std::string>("&", "logical operator"));
-	additional.insert(std::pair<std::string, std::string>("|", "logical operator"));
-	additional.insert(std::pair<std::string, std::string>("||", "logical operator"));
+    additional.insert(std::pair<std::string, std::string>("%", "arithmetic operator"));
+    additional.insert(std::pair<std::string, std::string>("<", "relational operator"));
+    additional.insert(std::pair<std::string, std::string>(">", "relational operator"));
+    additional.insert(std::pair<std::string, std::string>(">=", "relational operator"));
+    additional.insert(std::pair<std::string, std::string>("<=", "relational operator"));
+    additional.insert(std::pair<std::string, std::string>("!=", "relational operator"));
+    additional.insert(std::pair<std::string, std::string>("==", "relational operator"));
+    additional.insert(std::pair<std::string, std::string>("&&", "logical operator"));
+    additional.insert(std::pair<std::string, std::string>("&", "bitwise operator"));
+    additional.insert(std::pair<std::string, std::string>("|", "bitwise operator"));
+    additional.insert(std::pair<std::string, std::string>("||", "logical operator"));
+    additional.insert(std::pair<std::string, std::string>("!", "unary operator"));
+    additional.insert(std::pair<std::string, std::string>("++", "unary operator"));
+    additional.insert(std::pair<std::string, std::string>("--", "unary operator"));
 }
 
 SymbolType Lexer::getType(const char ch)
@@ -98,6 +101,14 @@ SymbolType Lexer::getType(const char ch)
 	{
 		return SymbolType::L_OPERATOR;
 	}
+    else if (it->second == "unary operator")
+    {
+        return SymbolType::U_OPERATOR;
+    }
+    else if (it->second == "bitwise operator")
+    {
+        return SymbolType::B_OPERATOR;
+    }
 
 	return SymbolType();
 }
@@ -314,65 +325,107 @@ void Lexer::runAnalysis()
 
 			charType = getType(line[i]);
 
-			if (lexemeType == SymbolType::NONE || lexemeType == SymbolType::D_CONST)
-			{
-				if (isDFA(line[i]))
-				{
-					if (!lexeme.empty() && machineState == MachineState::SIGN)
-					{
-						createToken(lexeme, lineCounter, charType);
-						lexeme.clear();
-					}
-					lexemeType = SymbolType::D_CONST;
-					lexeme += line[i];
-					continue;
-				}
-				else
-				{
-					if (machineState != MachineState::NONE)
-					{
-						createToken(lexeme, lineCounter, charType);
-						lexeme.clear();
-						lexeme += line[i];
-						lexemeType = charType;
-						machineState = MachineState::NONE;
-						continue;
-					}
-				}
-			}
+            if (machineState == MachineState::SIGN && (line[i] == '+' || line[i] == '-'))
+            {
+                if ((lexeme == "+" && line[i] == '+') || (lexeme == "-" && line[i] == '-'))
+                {
+                    lexeme += line[i];
+                    machineState = MachineState::NONE;
+                    createToken(lexeme, lineCounter, lexemeType);
+                    lexemeType = SymbolType::NONE;
+                    lexeme.clear();
+                    continue;
+                }
+            }
 
-			if (lexemeType == SymbolType::NONE)
-			{
-				lexemeType = charType;
-				lexeme += line[i];
-				continue;
-			}
+            if (lexemeType == SymbolType::NONE || lexemeType == SymbolType::D_CONST)
+            {
+                if (isDFA(line[i]))
+                {
+                    if (!lexeme.empty() && machineState == MachineState::SIGN)
+                    {
+                        createToken(lexeme, lineCounter, charType);
+                        lexeme.clear();
+                    }
+                    lexemeType = SymbolType::D_CONST;
+                    lexeme += line[i];
+                    continue;
+                }
+                else
+                {
+                    if (machineState != MachineState::NONE)
+                    {
+                        createToken(lexeme, lineCounter, charType);
+                        lexeme.clear();
+                        lexeme += line[i];
+                        lexemeType = charType;
+                        machineState = MachineState::NONE;
+                        continue;
+                    }
+                }
+            }
+
+            if (lexemeType == SymbolType::NONE)
+            {
+                lexemeType = charType;
+                lexeme += line[i];
+                continue;
+            }
             else if (lexemeType == SymbolType::LETTER && charType == SymbolType::DIGIT)
-			{
-				lexeme += line[i];
-				lexemeType = SymbolType::LETTER;
-				continue;
-			}
+            {
+
+                lexeme += line[i];
+                lexemeType = SymbolType::LETTER;
+                continue;
+            }
             else if ((lexemeType == charType) && (charType == SymbolType::DIGIT))
-			{
-				lexeme += line[i];
-				continue;
-			}
-			else if ((lexemeType == charType) && (charType == SymbolType::LETTER))
-			{
-				lexeme += line[i];
-				continue;
-			}
-            else if (lexemeType == charType || lexemeType != charType)
-			{
-				createToken(lexeme, lineCounter, lexemeType);
-				lexeme.clear();
-				lexeme += line[i];
-				lexemeType = charType;
-				continue;
-			}
-		}
-		lineCounter++;
+            {
+                lexeme += line[i];
+                continue;
+            }
+            else if ((lexemeType == charType) && (charType == SymbolType::LETTER))
+            {
+                lexeme += line[i];
+                continue;
+            }
+            else if (lexeme == "=" && line[i] == '=')
+            {
+                lexeme += line[i];
+                createToken(lexeme, lineCounter, lexemeType);
+                lexemeType = SymbolType::NONE;
+                lexeme.clear();
+                continue;
+            }
+            else if ((lexemeType == SymbolType::B_OPERATOR) && (charType == SymbolType::B_OPERATOR))
+            {
+                if ((lexeme == "&" && line[i] == '&') || (lexeme == "|" && line[i] == '|'))
+                {
+                    lexeme += line[i];
+                    createToken(lexeme, lineCounter, lexemeType);
+                    lexemeType = SymbolType::NONE;
+                    lexeme.clear();
+                    continue;
+                }
+            }
+            else if ((lexemeType == SymbolType::U_OPERATOR || lexemeType == SymbolType::R_OPERATOR) && line[i] == '=')
+            {
+                lexeme += line[i];
+                createToken(lexeme, lineCounter, lexemeType);
+                lexemeType = SymbolType::NONE;
+                lexeme.clear();
+                continue;
+            }
+
+            if (lexemeType == charType || lexemeType != charType)
+            {
+                createToken(lexeme, lineCounter, lexemeType);
+                lexeme.clear();
+                lexeme += line[i];
+                lexemeType = charType;
+                continue;
+            }
+        }
+        lineCounter++;
 	}
     file.close();
 }

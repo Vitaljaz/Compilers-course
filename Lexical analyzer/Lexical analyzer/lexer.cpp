@@ -50,6 +50,7 @@ void Lexer::initializeAdditional()
 	additional.insert(std::pair<std::string, std::string>(")", "separator"));
 	additional.insert(std::pair<std::string, std::string>(";", "separator"));
 	additional.insert(std::pair<std::string, std::string>(".", "separator"));
+	additional.insert(std::pair<std::string, std::string>(",", "separator"));
 	additional.insert(std::pair<std::string, std::string>("_", "separator"));
 	additional.insert(std::pair<std::string, std::string>("+", "arithmetic operator"));
 	additional.insert(std::pair<std::string, std::string>("-", "arithmetic operator"));
@@ -62,12 +63,14 @@ void Lexer::initializeAdditional()
 	additional.insert(std::pair<std::string, std::string>(">=", "relational operator"));
 	additional.insert(std::pair<std::string, std::string>("<=", "relational operator"));
 	additional.insert(std::pair<std::string, std::string>("!=", "relational operator"));
-	additional.insert(std::pair<std::string, std::string>("!", "relational operator"));
 	additional.insert(std::pair<std::string, std::string>("==", "relational operator"));
 	additional.insert(std::pair<std::string, std::string>("&&", "logical operator"));
-	additional.insert(std::pair<std::string, std::string>("&", "logical operator"));
-	additional.insert(std::pair<std::string, std::string>("|", "logical operator"));
+	additional.insert(std::pair<std::string, std::string>("&", "bitwise operator"));
+	additional.insert(std::pair<std::string, std::string>("|", "bitwise operator"));
 	additional.insert(std::pair<std::string, std::string>("||", "logical operator"));
+	additional.insert(std::pair<std::string, std::string>("!", "unary operator"));
+	additional.insert(std::pair<std::string, std::string>("++", "unary operator"));
+	additional.insert(std::pair<std::string, std::string>("--", "unary operator"));
 }
 
 SymbolType Lexer::getType(const char ch)
@@ -99,6 +102,14 @@ SymbolType Lexer::getType(const char ch)
 	else if (it->second == "logical operator")
 	{
 		return SymbolType::L_OPERATOR;
+	}
+	else if (it->second == "unary operator")
+	{
+		return SymbolType::U_OPERATOR;
+	}
+	else if (it->second == "bitwise operator")
+	{
+		return SymbolType::B_OPERATOR;
 	}
 
 	return SymbolType();
@@ -316,10 +327,23 @@ void Lexer::runAnalysis()
 
 			charType = getType(line[i]);
 
+			if (machineState == MachineState::SIGN && (line[i] == '+' || line[i] == '-'))
+			{
+				if ((lexeme == "+" && line[i] == '+') || (lexeme == "-" && line[i] == '-'))
+				{
+					lexeme += line[i];
+					machineState = MachineState::NONE;
+					createToken(lexeme, lineCounter, lexemeType);
+					lexemeType = SymbolType::NONE;
+					lexeme.clear();
+					continue;
+				}
+			}
+
 			if (lexemeType == SymbolType::NONE || lexemeType == SymbolType::D_CONST)
 			{
 				if (isDFA(line[i]))
-				{
+				{	
 					if (!lexeme.empty() && machineState == MachineState::SIGN)
 					{
 						createToken(lexeme, lineCounter, charType);
@@ -351,7 +375,7 @@ void Lexer::runAnalysis()
 			}
 			else if (lexemeType == SymbolType::LETTER && charType == SymbolType::DIGIT)
 			{
-				
+
 				lexeme += line[i];
 				lexemeType = SymbolType::LETTER;
 				continue;
@@ -366,7 +390,35 @@ void Lexer::runAnalysis()
 				lexeme += line[i];
 				continue;
 			}
-			else if (lexemeType == charType || lexemeType != charType)
+			else if (lexeme == "=" && line[i] == '=')
+			{
+				lexeme += line[i];
+				createToken(lexeme, lineCounter, lexemeType);
+				lexemeType = SymbolType::NONE;
+				lexeme.clear();
+				continue;
+			}
+			else if ((lexemeType == SymbolType::B_OPERATOR) && (charType == SymbolType::B_OPERATOR))
+			{
+				if ((lexeme == "&" && line[i] == '&') || (lexeme == "|" && line[i] == '|'))
+				{
+					lexeme += line[i];
+					createToken(lexeme, lineCounter, lexemeType);
+					lexemeType = SymbolType::NONE;
+					lexeme.clear();
+					continue;
+				}
+			}
+			else if ((lexemeType == SymbolType::U_OPERATOR || lexemeType == SymbolType::R_OPERATOR) && line[i] == '=')
+			{
+				lexeme += line[i];
+				createToken(lexeme, lineCounter, lexemeType);
+				lexemeType = SymbolType::NONE;
+				lexeme.clear();
+				continue;
+			}
+			
+			if (lexemeType == charType || lexemeType != charType)
 			{
 				createToken(lexeme, lineCounter, lexemeType);
 				lexeme.clear();

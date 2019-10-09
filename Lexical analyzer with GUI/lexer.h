@@ -14,8 +14,10 @@ enum class SymbolType : int
 	D_CONST,    // exp const
 	SEPARATOR,  // { } ( ) ;
 	R_OPERATOR, // < > >= <= ! ==
-	A_OPERATOR, // + - = * 
-	L_OPERATOR  // && ||
+    A_OPERATOR, // + - = *
+    L_OPERATOR, // && ||
+    B_OPERATOR, // & |
+    U_OPERATOR  // ++ -- !
 };
 
 enum class MachineState : int

@@ -12,9 +12,11 @@ enum class SymbolType : int
 	LETTER,     // a-z
 	D_CONST,    // exp const
 	SEPARATOR,  // { } ( ) ;
-	R_OPERATOR, // < > >= <= ! ==
+	R_OPERATOR, // < > >= <= != ==
 	A_OPERATOR, // + - = * 
-	L_OPERATOR  // && ||
+	L_OPERATOR, // && ||
+	B_OPERATOR, // & |
+	U_OPERATOR  // ++ -- !
 };
 
 enum class MachineState : int
