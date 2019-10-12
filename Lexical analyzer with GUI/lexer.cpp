@@ -38,6 +38,7 @@ void Lexer::initializeKeyWords()
     keywords.insert(std::pair<std::string, std::string>("true", "keyword"));
     keywords.insert(std::pair<std::string, std::string>("false", "keyword"));
     keywords.insert(std::pair<std::string, std::string>("return", "keyword"));
+    keywords.insert(std::pair<std::string, std::string>("else", "keyword"));
 }
 
 void Lexer::initializeAdditional()
