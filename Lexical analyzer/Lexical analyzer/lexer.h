@@ -16,7 +16,8 @@ enum class SymbolType : int
 	A_OPERATOR, // + - = * 
 	L_OPERATOR, // && ||
 	B_OPERATOR, // & |
-	U_OPERATOR  // ++ -- !
+	U_OPERATOR, // ++ -- !
+	ERROR       // 
 };
 
 enum class MachineState : int

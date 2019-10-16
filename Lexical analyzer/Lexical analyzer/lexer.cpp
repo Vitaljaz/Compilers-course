@@ -263,6 +263,13 @@ void Lexer::createToken(std::string& t_lexeme, unsigned int line, SymbolType typ
 		}
 	}
 
+	if (type == SymbolType::ERROR)
+	{
+		Token token = { t_lexeme, "ERROR", line };
+		tokenList.push_back(token);
+		return;
+	}
+
 	if (type == SymbolType::DIGIT)
 	{
 		Token token = { t_lexeme, "digit", line };
@@ -356,6 +363,13 @@ void Lexer::runAnalysis()
 				}
 				else
 				{
+					if (machineState == MachineState::DIGIT && charType == SymbolType::LETTER)
+					{
+						lexeme += line[i];
+						lexemeType = SymbolType::ERROR;
+						machineState = MachineState::NONE;
+						continue;
+					}
 					if (machineState != MachineState::NONE)
 					{
 						createToken(lexeme, lineCounter, charType);
@@ -418,7 +432,12 @@ void Lexer::runAnalysis()
 				lexeme.clear();
 				continue;
 			}
-			
+			else if (lexemeType == SymbolType::ERROR && (charType == SymbolType::LETTER || charType == SymbolType::DIGIT))
+			{
+				lexeme += line[i];
+				continue;
+			}
+
 			if (lexemeType == charType || lexemeType != charType)
 			{
 				createToken(lexeme, lineCounter, lexemeType);
