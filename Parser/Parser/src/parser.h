@@ -11,6 +11,22 @@ struct Error
 	std::string errorMessage;
 };
 
+enum class ErrorType : int
+{
+	MISS_ID = 0,
+	MISS_EQ, // =
+	MISS_OP, // int float id
+	MISS_BR_O,
+	MISS_BR_C,
+	MISS_END_SEP,
+	MISS_F_BR_O,
+	MISS_F_BR_C,
+	DOUBLE_UNARY,
+	EXP_START,
+	EXP_MISS_OP,
+	ST_EXP_MISS_OP,
+};
+
 enum class Brackets : int {O_BR, C_BR};
 
 class Parser
@@ -36,7 +52,7 @@ private:
 
 	std::stack<Brackets> bracketsList;
 
-	void createError(unsigned line, unsigned errorNumber);
+	void createError(unsigned line, ErrorType errorNumber);
 	void getLexems();
 	void move();
 

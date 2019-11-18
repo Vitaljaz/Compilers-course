@@ -12,8 +12,9 @@ void Parser::run()
 	statements();
 }
 
-void Parser::createError(unsigned line, unsigned errorNumber)
+void Parser::createError(unsigned line, ErrorType errorNumber)
 {
+
 }
 
 void Parser::getLexems()
@@ -59,6 +60,10 @@ void Parser::statement()
 		{
 			statement();
 		}
+		else
+		{
+			createError(token.lineNumber, ErrorType::MISS_ID);
+		}
 	}
 	else if (token.lexeme == "if")
 	{
@@ -72,7 +77,7 @@ void Parser::statement()
 		}
 		else
 		{
-
+			createError(token.lineNumber, ErrorType::MISS_BR_O);
 		}
 	}
 	else if (token.lexeme == "for")
@@ -81,7 +86,18 @@ void Parser::statement()
 	}
 	else if (token.lexeme == "while")
 	{
-
+		if (br_open())
+		{
+			if (expression())
+			{
+				LOG("CONSTRUCTION while (expression) - done")
+					statement();
+			}
+		}
+		else
+		{
+			createError(token.lineNumber, ErrorType::MISS_BR_O);
+		}
 	}
 	else if (token.lexeme == "break")
 	{
@@ -92,7 +108,8 @@ void Parser::statement()
 		}
 		else
 		{
-			createError(token.lineNumber, 0);
+			createError(token.lineNumber, ErrorType::MISS_END_SEP);
+			return;
 		}
 	}
 	else if (token.lexeme == "continue")
@@ -104,7 +121,7 @@ void Parser::statement()
 		}
 		else
 		{
-			createError(token.lineNumber, 0);
+			createError(token.lineNumber, ErrorType::MISS_END_SEP);
 			return;
 		}
 	}
@@ -122,7 +139,7 @@ void Parser::statement()
 	{
 		if (bracketsList.empty())
 		{
-			createError(token.lineNumber, 1); // not find pair for bracket
+			createError(token.lineNumber, ErrorType::MISS_F_BR_O); // not find pair for bracket
 		}
 		else
 		{
@@ -149,7 +166,7 @@ void Parser::statement()
 		}
 		else
 		{
-			// error propysk ;
+			createError(token.lineNumber, ErrorType::MISS_END_SEP);
 		}
 	}
 }
@@ -169,11 +186,13 @@ bool Parser::expression()
 			}
 			else
 			{
-				return false; // error
+				createError(token.lineNumber, ErrorType::EXP_START);
+				return false;
 			}
 		}
 		else
 		{
+			createError(token.lineNumber, ErrorType::DOUBLE_UNARY);
 			return false; // error
 		}
 	}
@@ -186,6 +205,7 @@ bool Parser::expression()
 		}
 		else
 		{
+			createError(token.lineNumber, ErrorType::EXP_MISS_OP);
 			return false;
 		}
 	}
@@ -205,6 +225,7 @@ bool Parser::statement_exp()
 		}
 		else
 		{
+			createError(token.lineNumber, ErrorType::ST_EXP_MISS_OP);
 			return false;
 		}
 	}
@@ -218,8 +239,14 @@ bool Parser::statement_exp()
 			}
 			else
 			{
+				createError(token.lineNumber, ErrorType::MISS_ID);
 				return false;
 			}
+		}
+		else
+		{
+			createError(token.lineNumber, ErrorType::DOUBLE_UNARY);
+			return false;
 		}
 	}
 }
@@ -238,6 +265,7 @@ bool Parser::what_statement_exp()
 			}
 			else
 			{
+				createError(token.lineNumber, ErrorType::MISS_OP);
 				return false;
 			}
 	}
@@ -249,6 +277,7 @@ bool Parser::what_statement_exp()
 		}
 		else
 		{
+			createError(token.lineNumber, ErrorType::MISS_OP);
 			return false;
 		}
 	}
@@ -260,6 +289,7 @@ bool Parser::what_statement_exp()
 		}
 		else
 		{
+			createError(token.lineNumber, ErrorType::MISS_OP);
 			return false;
 		}
 	}
@@ -280,6 +310,7 @@ bool Parser::statement_exp_start()
 		return true;
 	}
 
+	createError(token.lineNumber, ErrorType::MISS_EQ);
 	return false;
 }
 
@@ -309,6 +340,7 @@ bool Parser::what_expression()
 		}
 		else 
 		{
+			createError(token.lineNumber, ErrorType::MISS_OP);
 			return false;
 		}
 	}
@@ -320,6 +352,7 @@ bool Parser::what_expression()
 		}
 		else
 		{
+			createError(token.lineNumber, ErrorType::MISS_OP);
 			return false;
 		}
 	}
@@ -331,6 +364,7 @@ bool Parser::what_expression()
 		}
 		else
 		{
+			createError(token.lineNumber, ErrorType::MISS_OP);
 			return false;
 		}
 	}
@@ -375,6 +409,7 @@ bool Parser::local_var()
 		}
 	}
 
+	createError(token.lineNumber, ErrorType::MISS_ID);
 	return false;
 }
 
