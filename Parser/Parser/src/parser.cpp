@@ -12,8 +12,13 @@ void Parser::run()
 	statements();
 }
 
+void Parser::createError(unsigned line, unsigned errorNumber)
+{
+}
+
 void Parser::getLexems()
 {
+	lexer.printLexemList();
 	tokenList = lexer.getTokenList();
 }
 
@@ -50,23 +55,28 @@ void Parser::statement()
 
 	if (token.tokenClass == "type")
 	{
-		LOG("-> type")
-		local_var_decl();
+		LOG("type")
+		if (local_var())
+		{
+			LOG("type ID; - done")
+			statement();
+		}
 	}
 	else if (token.lexeme == "if")
 	{
-		LOG("-> if")
-			move();
-		if (token.lexeme == "(")
+		LOG("IF")
+		if (br_open())
 		{
-			LOG("-> if -> (")
-				expression();
-			LOG("-> if (exp) -> statement")
+			LOG("IF (")
+			if (expression())
+			{
+				LOG("CONSTRUCTION if (expression) - done")
 				statement();
+			}
 		}
 		else
 		{
-			LOG("ERROR: wait ( after if")
+
 		}
 	}
 	else if (token.lexeme == "for")
@@ -79,104 +89,269 @@ void Parser::statement()
 	}
 	else if (token.lexeme == "break")
 	{
-
-	}
-	else if (token.lexeme == "continue")
-	{
-
-	}
-	else if (token.lexeme == ";")
-	{
-		LOG("-> ; -> GOOD")
-	}
-	else if (token.lexeme == "{")
-	{
-	}
-}
-
-void Parser::expression()
-{
-	move();
-	if (token.tokenClass == "unary")
-	{
-		LOG("-> unary")
-		expression();
-	}
-	else if (token.tokenClass == "identifier" || token.tokenClass == "digit"
-			|| token.lexeme == "true" || token.lexeme == "false")
-	{
-		if (lastSign || prevToken.lexeme == "(" || prevToken.tokenClass == "unary")
+		if (end_lexeme())
 		{
-			lastSign = false;
-			LOG("-> [L_S] | ( | unary -> OPERAND")
-			what_expression();
+			LOG("break; - good lexeme")
+			return;
 		}
 		else
 		{
-			LOG("ERROR: incorrect start expression")
+			createError(token.lineNumber, 0);
 		}
 	}
-}
-
-void Parser::what_expression()
-{
-	move();
-	if (token.lexeme == ")")
+	else if (token.lexeme == "continue")
 	{
-		LOG("-> OPERAND -> )")
+		if (end_lexeme())
+		{
+			LOG("continue; - good lexeme")
+				return;
+		}
+		else
+		{
+			createError(token.lineNumber, 0);
+			return;
+		}
+	}
+	else if (token.lexeme == ";")
+	{
 		return;
 	}
-	else if (token.tokenClass == "relational")
+	else if (token.lexeme == "{")
 	{
-		lastSign = true;
-		expression();
+		LOG("{")
+		bracketsList.push(Brackets::O_BR);
+		statement();
 	}
-	else if (token.tokenClass == "logical")
+	else if (token.lexeme == "}")
 	{
-		lastSign = true;
-		expression();
+		if (bracketsList.empty())
+		{
+			createError(token.lineNumber, 1); // not find pair for bracket
+		}
+		else
+		{
+			if (bracketsList.top() == Brackets::O_BR)
+			{
+				LOG("{ statement } - done")
+				bracketsList.pop();
+				return;
+			}
+			else
+			{
+				bracketsList.push(Brackets::C_BR);
+			}
+		}
 	}
-	else
+	else if (token.tokenClass == "operand")
 	{
-		LOG("ERROR: wait ) or OPERATION")
+		// if prev token ; 
 	}
 }
 
-void Parser::local_var_decl()
+bool Parser::expression()
+{
+	move();
+
+	if (token.tokenClass == "unary operator")
+	{
+		if (prevToken.tokenClass != "unary")
+		{
+			if (expression())
+			{
+				return true;
+			}
+			else
+			{
+				return false; // error
+			}
+		}
+		else
+		{
+			return false; // error
+		}
+	}
+	else if (token.tokenClass == "identifier") // need operand
+	{
+		LOG("ID")
+		if (what_expression())
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+	return false;
+}
+
+bool Parser::what_expression()
+{
+	move();
+	
+	if (token.tokenClass == "logical operator")
+	{
+		LOG("&&")
+		if (expression())
+		{
+			LOG("EXP")
+			return true;
+		}
+		else 
+		{
+			return false;
+		}
+	}
+	else if (token.tokenClass == "relational operator")
+	{
+		if (expression())
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else if (token.tokenClass == "arithmetic operator")
+	{
+		if (expression())
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else if (token.lexeme == ")")
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool Parser::local_var()
+{
+	if (local_var_decl())
+	{
+		LOG("type identifier")
+		if (local_var_list())
+		{
+			LOG("type identifier ,")
+			if (local_var())
+			{
+				return true;
+			}
+		}
+		else
+		{
+			if (local_var_init())
+			{
+				LOG("type identifier = ")
+				if (local_var_init())
+				{
+					LOG("type identifier = op")
+					return true;
+				}
+			}
+			else if (local_var_end())
+			{
+				LOG("type identifier;")
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+bool Parser::local_var_end()
+{
+	move();
+
+	if (token.lexeme == ";")
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool Parser::local_var_r()
+{
+	move();
+	if (token.tokenClass == "identifier" || token.tokenClass == "digit") // operand
+	{
+		if (local_var_end())
+		{
+			return true;
+		}
+	}
+	
+	return false;
+}
+
+bool Parser::local_var_init()
+{
+	move();
+	
+	if (token.tokenClass == "=")
+	{
+		return true;
+	}
+	return false;
+}
+bool Parser::local_var_decl()
 {
 	move();
 
 	if (token.tokenClass == "identifier")
 	{
-		LOG("type -> ID")
-		move();
-		if (token.lexeme == ";")
-		{
-			LOG("type -> ID -> ;")
-			return;
-		}
-		else if (token.lexeme == "=")
-		{
-			LOG("type -> ID -> =")
-			move();
-			if (token.tokenClass == "digit" || token.tokenClass == "identifier")
-			{
-				LOG("type -> ID -> = -> OP")
-				move();
-				if (token.lexeme == ",")
-				{
-					LOG("type -> ID -> = -> OP -> ,")
-					local_var_decl();
-				}
-				else if (token.lexeme == ";")
-				{
-					return;
-				}
-			}
-		}
-		else if (token.lexeme == ",")
-		{
-			local_var_decl();
-		}
+		return true;
 	}
+	return false;
+}
+
+bool Parser::local_var_list()
+{
+	move();
+
+	if (token.lexeme == ",")
+	{
+		return true;
+	}
+	return false;
+}
+
+bool Parser::end_lexeme()
+{
+	move();
+
+	if (token.lexeme == ";")
+		return true;
+
+	return false;
+}
+
+bool Parser::br_open()
+{
+	move();
+
+	if (token.lexeme == "(")
+		return true;
+
+	return false;
+}
+
+bool Parser::br_close()
+{
+	move();
+
+	if (token.lexeme == ")")
+		return true;
+
+	return false;
 }

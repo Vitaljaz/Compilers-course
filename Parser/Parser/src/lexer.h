@@ -68,7 +68,7 @@ private:
 	MachineState machineState = MachineState::NONE;
 
 	SymbolType getType(const char ch);
-	std::string getLexemeClass(const std::string& lexeme);
+	std::string getLexemeClass(std::string lexeme);
 	
 	void runAnalysis();
 	void initializeHashMap();

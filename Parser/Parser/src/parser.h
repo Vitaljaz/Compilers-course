@@ -1,6 +1,8 @@
 #pragma once
 #include "lexer.h"
 
+#include <stack>
+
 #define LOG(X) std::cout << X << std::endl;
 
 struct Error
@@ -8,6 +10,8 @@ struct Error
 	unsigned line;
 	std::string errorMessage;
 };
+
+enum class Brackets : int {O_BR, C_BR};
 
 class Parser
 {
@@ -30,15 +34,27 @@ private:
 	std::vector<Token> tokenList;
 	std::vector<Error> errorsList;
 
-	void createError(unsigned line, std::string& message);
+	std::stack<Brackets> bracketsList;
+
+	void createError(unsigned line, unsigned errorNumber);
 	void getLexems();
 	void move();
 
 	void statements();
 	void statement();
 
-	void expression();
-	void what_expression();
+	bool expression();
+	bool what_expression();
 
-	void local_var_decl();
+	bool local_var();
+	bool local_var_init();
+	bool local_var_r();
+	bool local_var_end();
+	bool local_var_decl();
+	bool local_var_list();
+
+	bool end_lexeme();
+
+	bool br_open();
+	bool br_close();
 };

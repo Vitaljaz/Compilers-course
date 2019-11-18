@@ -1,4 +1,6 @@
 #include "lexer.h"
+#include <algorithm>
+#include <cctype>
 
 Lexer::Lexer(const std::string& fileName_)
 {
@@ -44,27 +46,29 @@ void Lexer::initializeKeyWords()
 
 void Lexer::initializeAdditional()
 {
-	additional.insert(std::pair<std::string, std::string>("{", "separator"));
 	additional.insert(std::pair<std::string, std::string>("}", "separator"));
 	additional.insert(std::pair<std::string, std::string>("(", "separator"));
 	additional.insert(std::pair<std::string, std::string>(")", "separator"));
 	additional.insert(std::pair<std::string, std::string>(";", "separator"));
 	additional.insert(std::pair<std::string, std::string>(".", "separator"));
 	additional.insert(std::pair<std::string, std::string>(",", "separator"));
+	additional.insert(std::pair<std::string, std::string>("{", "separator"));
 	additional.insert(std::pair<std::string, std::string>("+", "arithmetic operator"));
 	additional.insert(std::pair<std::string, std::string>("-", "arithmetic operator"));
 	additional.insert(std::pair<std::string, std::string>("=", "arithmetic operator"));
-	additional.insert(std::pair<std::string, std::string>("<", "relational"));
-	additional.insert(std::pair<std::string, std::string>(">", "relational"));
-	additional.insert(std::pair<std::string, std::string>(">=", "relational"));
-	additional.insert(std::pair<std::string, std::string>("<=", "relational"));
-	additional.insert(std::pair<std::string, std::string>("!=", "relational"));
-	additional.insert(std::pair<std::string, std::string>("==", "relational"));
-	additional.insert(std::pair<std::string, std::string>("&&", "logical"));
-	additional.insert(std::pair<std::string, std::string>("||", "logical"));
-	additional.insert(std::pair<std::string, std::string>("!", "unary"));
-	additional.insert(std::pair<std::string, std::string>("++", "unary"));
-	additional.insert(std::pair<std::string, std::string>("--", "unary"));
+	additional.insert(std::pair<std::string, std::string>("<", "relational operator"));
+	additional.insert(std::pair<std::string, std::string>(">", "relational operator"));
+	additional.insert(std::pair<std::string, std::string>(">=", "relational operator"));
+	additional.insert(std::pair<std::string, std::string>("<=", "relational operator"));
+	additional.insert(std::pair<std::string, std::string>("!=", "relational operator"));
+	additional.insert(std::pair<std::string, std::string>("==", "relational operator"));
+	additional.insert(std::pair<std::string, std::string>("&", "bitwise operator"));
+	additional.insert(std::pair<std::string, std::string>("|", "bitwise operator"));
+	additional.insert(std::pair<std::string, std::string>("&&", "logical operator"));
+	additional.insert(std::pair<std::string, std::string>("||", "logical operator"));
+	additional.insert(std::pair<std::string, std::string>("!", "unary operator"));
+	additional.insert(std::pair<std::string, std::string>("++", "unary operator"));
+	additional.insert(std::pair<std::string, std::string>("--", "unary operator"));
 }
 
 SymbolType Lexer::getType(const char ch)
@@ -109,7 +113,7 @@ SymbolType Lexer::getType(const char ch)
 	return SymbolType();
 }
 
-std::string Lexer::getLexemeClass(const std::string& lexeme)
+std::string Lexer::getLexemeClass(std::string lexeme)
 {
 	auto it = keywords.find(lexeme);
 	if (it != keywords.end())
@@ -303,7 +307,7 @@ void Lexer::runAnalysis()
 
 		for (size_t i = 0; i <= line.size(); ++i)
 		{
-			if (line[i] == ' ' || line[i] == '\0' || line[i] == '\n')
+			if (line[i] == ' ' || line[i] == '\0' || line[i] == '\n' || std::isspace(line[i]))
 			{
 				if (lexemeType != SymbolType::NONE)
 				{
