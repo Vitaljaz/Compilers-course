@@ -1,1 +1,5 @@
-int a, b;
+if (a > b && c + 5 == 3)
+{
+	int b, c = 5, e = 3;
+	int a = 3;
+}

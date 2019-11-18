@@ -55,23 +55,19 @@ void Parser::statement()
 
 	if (token.tokenClass == "type")
 	{
-		LOG("type")
 		if (local_var())
 		{
-			LOG("type ID; - done")
 			statement();
 		}
 	}
 	else if (token.lexeme == "if")
 	{
-		LOG("IF")
 		if (br_open())
 		{
-			LOG("IF (")
 			if (expression())
 			{
 				LOG("CONSTRUCTION if (expression) - done")
-				statement();
+					statement();
 			}
 		}
 		else
@@ -235,33 +231,34 @@ bool Parser::what_expression()
 
 bool Parser::local_var()
 {
-	if (local_var_decl())
+	move();
+	if (token.tokenClass == "identifier")
 	{
-		LOG("type identifier")
-		if (local_var_list())
+		move();
+		LOG("identifier")
+		if (local_var_end())
 		{
-			LOG("type identifier ,")
-			if (local_var())
+			LOG("type identifier ;")
+			return true;
+		}
+		else if (local_var_init())
+		{
+			LOG("INIT")
+			move();
+			if (local_var_end())
 			{
+				LOG("type identifier = op ;")
 				return true;
+			}
+			else if (local_var_list())
+			{
+				LOG("type identifier = op ,")
+				local_var();
 			}
 		}
-		else
+		else if (local_var_list())
 		{
-			if (local_var_init())
-			{
-				LOG("type identifier = ")
-				if (local_var_init())
-				{
-					LOG("type identifier = op")
-					return true;
-				}
-			}
-			else if (local_var_end())
-			{
-				LOG("type identifier;")
-				return true;
-			}
+			local_var();
 		}
 	}
 
@@ -270,8 +267,6 @@ bool Parser::local_var()
 
 bool Parser::local_var_end()
 {
-	move();
-
 	if (token.lexeme == ";")
 	{
 		return true;
@@ -280,45 +275,21 @@ bool Parser::local_var_end()
 	return false;
 }
 
-bool Parser::local_var_r()
+bool Parser::local_var_init()
 {
-	move();
-	if (token.tokenClass == "identifier" || token.tokenClass == "digit") // operand
+	if (token.lexeme == "=")
 	{
-		if (local_var_end())
+		move();
+		if (token.tokenClass == "digit" || token.tokenClass == "identifier")
 		{
 			return true;
 		}
-	}
-	
-	return false;
-}
-
-bool Parser::local_var_init()
-{
-	move();
-	
-	if (token.tokenClass == "=")
-	{
-		return true;
-	}
-	return false;
-}
-bool Parser::local_var_decl()
-{
-	move();
-
-	if (token.tokenClass == "identifier")
-	{
-		return true;
 	}
 	return false;
 }
 
 bool Parser::local_var_list()
 {
-	move();
-
 	if (token.lexeme == ",")
 	{
 		return true;
