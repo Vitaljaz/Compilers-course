@@ -25,6 +25,7 @@ enum class ErrorType : int
 	EXP_START,
 	EXP_MISS_OP,
 	ST_EXP_MISS_OP,
+	FOR_MISS_START,
 };
 
 enum class Brackets : int {O_BR, C_BR};
@@ -64,9 +65,7 @@ private:
 
 	bool local_var();
 	bool local_var_init();
-	bool local_var_r();
 	bool local_var_end();
-	bool local_var_decl();
 	bool local_var_list();
 
 	bool statement_id_exp();
@@ -74,6 +73,7 @@ private:
 	bool statement_exp_start();
 	bool what_statement_exp();
 	
+	bool for_opt();
 
 	bool end_lexeme();
 

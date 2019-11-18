@@ -58,7 +58,7 @@ void Parser::statement()
 	{
 		if (local_var())
 		{
-			statement();
+			return;
 		}
 		else
 		{
@@ -82,7 +82,27 @@ void Parser::statement()
 	}
 	else if (token.lexeme == "for")
 	{
+		if (br_open())
+		{
+			if (for_opt())
+			{
+				if (for_opt())
+				{
+					if (for_opt())
+					{
 
+					}
+				}
+			}
+			else
+			{
+
+			}
+		}
+		else
+		{
+			createError(token.lineNumber, ErrorType::MISS_BR_O);
+		}
 	}
 	else if (token.lexeme == "while")
 	{
@@ -171,6 +191,23 @@ void Parser::statement()
 	}
 }
 
+bool Parser::for_opt()
+{
+	move();
+
+	if (local_var())
+	{
+		return true;
+	}
+	else if (statement_exp_start())
+	{
+		statement_exp();
+		return true;
+	}
+
+	createError(token.lineNumber, ErrorType::FOR_MISS_START);
+	return false;
+}
 
 bool Parser::expression()
 {
