@@ -140,9 +140,20 @@ void Parser::statement()
 	}
 	else if (token.tokenClass == "operand")
 	{
-		// if prev token ; 
+		if (prevToken.lexeme == ";")
+		{
+			if (statement_exp_start())
+			{
+				statement_exp();
+			}
+		}
+		else
+		{
+			// error propysk ;
+		}
 	}
 }
+
 
 bool Parser::expression()
 {
@@ -150,7 +161,7 @@ bool Parser::expression()
 
 	if (token.tokenClass == "unary operator")
 	{
-		if (prevToken.tokenClass != "unary")
+		if (prevToken.tokenClass != "unary operator")
 		{
 			if (expression())
 			{
@@ -177,6 +188,108 @@ bool Parser::expression()
 		{
 			return false;
 		}
+	}
+
+	return false;
+}
+
+bool Parser::statement_exp()
+{
+	move();
+
+	if (token.tokenClass == "identifier") // operand
+	{
+		if (what_statement_exp())
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else if (token.tokenClass == "unary operator")
+	{
+		if (prevToken.tokenClass != "unary operator")
+		{
+			if (statement_exp())
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+	}
+}
+
+bool Parser::what_statement_exp()
+{
+	move();
+
+	if (token.tokenClass == "logical operator")
+	{
+		LOG("&&")
+			if (statement_exp())
+			{
+				LOG("EXP")
+					return true;
+			}
+			else
+			{
+				return false;
+			}
+	}
+	else if (token.tokenClass == "relational operator")
+	{
+		if (statement_exp())
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else if (token.tokenClass == "arithmetic operator")
+	{
+		if (statement_exp())
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else if (token.lexeme == ";")
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool Parser::statement_exp_start()
+{
+	move();
+	
+	if (token.lexeme == "=")
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool Parser::statement_id_exp()
+{
+	move();
+
+	if (token.tokenClass == "identifier")
+	{
+		return true;
 	}
 
 	return false;

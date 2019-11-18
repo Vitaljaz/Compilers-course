@@ -53,6 +53,12 @@ private:
 	bool local_var_decl();
 	bool local_var_list();
 
+	bool statement_id_exp();
+	bool statement_exp();
+	bool statement_exp_start();
+	bool what_statement_exp();
+	
+
 	bool end_lexeme();
 
 	bool br_open();
