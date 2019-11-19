@@ -30,7 +30,7 @@ void Parser::createError(unsigned line, ErrorType errorNumber)
 		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен 'OPERAND'.\n" });
 		break;
 	case ErrorType::MISS_BR_O:
-		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен знак '('.\n" });
+		errorsList.push_back({ line,"Пропущен символ начала выражения '('.\n" });
 		break;
 	case ErrorType::MISS_BR_C:
 		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен знак ')'.\n" });
@@ -51,10 +51,22 @@ void Parser::createError(unsigned line, ErrorType errorNumber)
 		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " должно быть начало выражения 'OP'.\n" });
 		break;
 	case ErrorType::EXP_MISS_OP:
-		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен знак OPERAND.\n" });
+		errorsList.push_back({ line,"Неожиданный конец выражения, ожидался символ ';' или '=', или ','.\n" });
 		break;
 	case ErrorType::FOR_MISS_START:
 		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " должно быть начало выражения.\n" });
+		break;
+	case ErrorType::EXP_MISS_OP_LIST:
+		errorsList.push_back({ line,"Ожидался 'ID' после символа ',' .\n" });
+		break;
+	case ErrorType::EXP_MISS_INIT_ARG:
+		errorsList.push_back({ line,"После '=' ожидался аргумент 'ID' или 'DIGIT' .\n" });
+		break;
+	case ErrorType::EXP_MISS_NEXT_ARG:
+		errorsList.push_back({ line,"После 'operand' ожидался символ ';' или ','.\n" });
+		break;
+	case ErrorType::MISS_START_EXP:
+		errorsList.push_back({ line,"Пропущено начало выражения после '('.\n" });
 		break;
 	}
 }
@@ -115,10 +127,6 @@ void Parser::statement()
 		{
 			return;
 		}
-		else
-		{
-			createError(token.lineNumber, ErrorType::MISS_ID);
-		}
 	}
 	else if (token.lexeme == "if")
 	{
@@ -128,6 +136,11 @@ void Parser::statement()
 			{
 				LOG("CONSTRUCTION if (expression) - done")
 					statement();
+			}
+			else
+			{
+				createError(token.lineNumber, ErrorType::MISS_START_EXP);
+				return;
 			}
 		}
 		else
@@ -477,20 +490,47 @@ bool Parser::local_var()
 		{
 			LOG("INIT")
 			move();
-			if (local_var_end())
+			if (token.tokenClass == "digit" || token.tokenClass == "identifier")
 			{
-				LOG("type identifier = op ;")
-				return true;
+				move();
+				if (local_var_end())
+				{
+					LOG("type identifier = op ;")
+						return true;
+				}
+				else if (local_var_list())
+				{
+					LOG("type identifier = op ,")
+						local_var();
+					return true;
+				}
+				else
+				{
+					createError(token.lineNumber, ErrorType::EXP_MISS_NEXT_ARG);
+					return false;
+				}
 			}
-			else if (local_var_list())
+			else
 			{
-				LOG("type identifier = op ,")
-				local_var();
+				createError(token.lineNumber, ErrorType::EXP_MISS_INIT_ARG);
+				return false;
 			}
 		}
 		else if (local_var_list())
 		{
-			local_var();
+			if (local_var())
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else
+		{
+			createError(token.lineNumber, ErrorType::EXP_MISS_OP);
+			return false;
 		}
 	}
 
@@ -512,11 +552,7 @@ bool Parser::local_var_init()
 {
 	if (token.lexeme == "=")
 	{
-		move();
-		if (token.tokenClass == "digit" || token.tokenClass == "identifier")
-		{
-			return true;
-		}
+		return true;
 	}
 	return false;
 }
