@@ -201,6 +201,7 @@ bool Parser::statement()
 				LOG("CONSTRUCTION if (expression) - done")
 					if (statement())
 					{
+							LOG("123")
 						return true;
 					}
 					else
@@ -294,6 +295,18 @@ bool Parser::statement()
 		{
 			createError(token.lineNumber, ErrorType::MISS_END_SEP);
 			return false;
+		}
+	}
+	else if (prevToken.lexeme == ";" && token.tokenClass == "unary operator")
+	{
+		move();
+		if (token.tokenClass == "identifier")
+		{
+			if (statement_exp_start())
+			{
+				statement_exp();
+				return true;
+			}
 		}
 	}
 	return false;
