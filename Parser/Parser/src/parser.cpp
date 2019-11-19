@@ -1,5 +1,8 @@
 #include "parser.h"
 
+#include <clocale>
+
+
 Parser::Parser(const std::string & fileName_)
 {
 	lexer = Lexer(fileName_);
@@ -14,7 +17,46 @@ void Parser::run()
 
 void Parser::createError(unsigned line, ErrorType errorNumber)
 {
-
+	setlocale(LC_ALL, "Russian");
+	switch (errorNumber)
+	{
+	case ErrorType::MISS_ID:
+		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен 'ID'.\n" });
+		break;
+	case ErrorType::MISS_EQ:
+		errorsList.push_back({ line,"На месте лексемы " + token.lexeme +  " пропущен знак '='.\n" });
+		break;
+	case ErrorType::MISS_OP:
+		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен 'OPERAND'.\n" });
+		break;
+	case ErrorType::MISS_BR_O:
+		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен знак '('.\n" });
+		break;
+	case ErrorType::MISS_BR_C:
+		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен знак ')'.\n" });
+		break;
+	case ErrorType::MISS_END_SEP:
+		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен знак ';'.\n" });
+		break;
+	case ErrorType::MISS_F_BR_O:
+		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен знак '{'.\n" });
+		break;
+	case ErrorType::MISS_F_BR_C:
+		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен знак '}'.\n" });
+		break;
+	case ErrorType::DOUBLE_UNARY:
+		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен знак '='.\n" });
+		break;
+	case ErrorType::EXP_START:
+		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " должно быть начало выражения 'OP'.\n" });
+		break;
+	case ErrorType::EXP_MISS_OP:
+		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен знак OPERAND.\n" });
+		break;
+	case ErrorType::FOR_MISS_START:
+		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " должно быть начало выражения.\n" });
+		break;
+	}
 }
 
 void Parser::getLexems()
@@ -26,9 +68,9 @@ void Parser::getLexems()
 void Parser::move()
 {
 	prevToken = token;
-	tokenList.erase(tokenList.begin());
 	if (!tokenList.empty())
 	{
+		tokenList.erase(tokenList.begin());
 		token = tokenList.front();
 	}
 	else
@@ -39,12 +81,25 @@ void Parser::move()
 
 void Parser::statements()
 {
+	errorsList.clear();
+
 	while (!tokenList.empty())
 	{
 		statement();
 	}
 
-	LOG("OK")
+	if (errorsList.empty())
+	{
+		std::cout << "OK! Good grammar!\n";
+	}
+	else
+	{
+		std::cout << "NO! Errors:\n";
+		for (auto& it : errorsList)
+		{
+			std::cout << "[Line " << it.line << "]: " << it.errorMessage;
+		}
+	}
 }
 
 void Parser::statement()
@@ -86,13 +141,6 @@ void Parser::statement()
 		{
 			if (for_opt())
 			{
-				if (for_opt())
-				{
-					if (for_opt())
-					{
-
-					}
-				}
 			}
 			else
 			{
