@@ -198,13 +198,22 @@ bool Parser::statement()
 		{
 			if (expression())
 			{
-				LOG("CONSTRUCTION while (expression) - done")
-					statement();
+				LOG("CONSTRUCTION if (expression) - done")
+					if (statement())
+					{
+						return true;
+					}
+					else
+					{
+						createError(token.lineNumber, ErrorType::BAD_STAT_START);
+						return false;
+					}
 			}
 		}
 		else
 		{
 			createError(token.lineNumber, ErrorType::MISS_BR_O);
+			return false;
 		}
 	}
 	else if (token.lexeme == "break")
