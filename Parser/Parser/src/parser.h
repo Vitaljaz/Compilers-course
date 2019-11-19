@@ -5,13 +5,6 @@
 
 #define LOG(X) std::cout << X << std::endl;
 
-struct Error
-{
-	unsigned line;
-	std::string errorMessage;
-	ErrorType errorType;
-};
-
 enum class ErrorType : int
 {
 	MISS_ID = 0,
@@ -32,6 +25,15 @@ enum class ErrorType : int
 	EXP_MISS_NEXT_ARG,
 	ST_EXP_MISS_OP,
 	FOR_MISS_START,
+	BR_MISS_PAIR,
+	BAD_STAT_START,
+};
+
+struct Error
+{
+	unsigned line;
+	std::string errorMessage;
+	ErrorType errorType;
 };
 
 enum class Brackets : int {O_BR, C_BR};
@@ -64,7 +66,7 @@ private:
 	void move();
 
 	void statements();
-	void statement();
+	bool statement();
 
 	bool expression();
 	bool what_expression();
@@ -85,4 +87,6 @@ private:
 
 	bool br_open();
 	bool br_close();
+
+	bool checkBrackets();
 };

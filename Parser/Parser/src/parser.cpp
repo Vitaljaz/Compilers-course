@@ -80,6 +80,12 @@ void Parser::createError(unsigned line, ErrorType errorNumber)
 	case ErrorType::MISS_WHAT_EXP:
 		errorsList.push_back({ line,"Пропущено продолжение выражения. Должно иметь вид: (expression).\n", ErrorType::MISS_WHAT_EXP });
 		break;
+	case ErrorType::BR_MISS_PAIR:
+		errorsList.push_back({ line,"Отсутствует парная скобка для }.\n", ErrorType::MISS_WHAT_EXP });
+		break;
+	case ErrorType::BAD_STAT_START:
+		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " должно быть начало выражения.\n", ErrorType::MISS_WHAT_EXP });
+		break;
 	}
 }
 
@@ -112,6 +118,11 @@ void Parser::statements()
 		statement();
 	}
 
+	if (!checkBrackets())
+	{
+		createError(prevToken.lineNumber, ErrorType::BR_MISS_PAIR);
+	}
+
 	if (errorsList.empty())
 	{
 		std::cout << "OK! Good grammar!\n";
@@ -126,7 +137,7 @@ void Parser::statements()
 	}
 }
 
-void Parser::statement()
+bool Parser::statement()
 {
 	if (first)
 		move();
@@ -137,7 +148,7 @@ void Parser::statement()
 	{
 		if (local_var())
 		{
-			return;
+			return true;
 		}
 	}
 	else if (token.lexeme == "if")
@@ -147,12 +158,21 @@ void Parser::statement()
 			if (expression())
 			{
 				LOG("CONSTRUCTION if (expression) - done")
-					statement();
+					if (statement())
+					{
+						return true;
+					}
+					else
+					{
+						createError(token.lineNumber, ErrorType::BAD_STAT_START);
+						return false;
+					}
 			}
 		}
 		else
 		{
 			createError(token.lineNumber, ErrorType::MISS_BR_O);
+			return false;
 		}
 	}
 	else if (token.lexeme == "for")
@@ -192,12 +212,12 @@ void Parser::statement()
 		if (end_lexeme())
 		{
 			LOG("break; - good lexeme")
-			return;
+				return true;
 		}
 		else
 		{
 			createError(token.lineNumber, ErrorType::MISS_END_SEP);
-			return;
+			return false;
 		}
 	}
 	else if (token.lexeme == "continue")
@@ -205,29 +225,36 @@ void Parser::statement()
 		if (end_lexeme())
 		{
 			LOG("continue; - good lexeme")
-				return;
+				return true;
 		}
 		else
 		{
 			createError(token.lineNumber, ErrorType::MISS_END_SEP);
-			return;
+			return false;
 		}
 	}
 	else if (token.lexeme == ";")
 	{
-		return;
+		return true;
 	}
 	else if (token.lexeme == "{")
 	{
 		LOG("{")
 		bracketsList.push(Brackets::O_BR);
-		statement();
+		if (statement())
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	else if (token.lexeme == "}")
 	{
 		if (bracketsList.empty())
 		{
-			createError(token.lineNumber, ErrorType::MISS_F_BR_O); // not find pair for bracket
+			createError(token.lineNumber, ErrorType::BR_MISS_PAIR); // not find pair for bracket
 		}
 		else
 		{
@@ -235,11 +262,12 @@ void Parser::statement()
 			{
 				LOG("{ statement } - done")
 				bracketsList.pop();
-				return;
+				return true;
 			}
 			else
 			{
 				bracketsList.push(Brackets::C_BR);
+				return true;
 			}
 		}
 	}
@@ -250,13 +278,16 @@ void Parser::statement()
 			if (statement_exp_start())
 			{
 				statement_exp();
+				return true;
 			}
 		}
 		else
 		{
 			createError(token.lineNumber, ErrorType::MISS_END_SEP);
+			return false;
 		}
 	}
+	return false;
 }
 
 bool Parser::for_opt()
@@ -595,6 +626,14 @@ bool Parser::br_close()
 	move();
 
 	if (token.lexeme == ")")
+		return true;
+
+	return false;
+}
+
+bool Parser::checkBrackets()
+{
+	if (bracketsList.empty())
 		return true;
 
 	return false;
