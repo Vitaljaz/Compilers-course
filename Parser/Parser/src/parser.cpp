@@ -17,56 +17,68 @@ void Parser::run()
 
 void Parser::createError(unsigned line, ErrorType errorNumber)
 {
+	if (!errorsList.empty())
+	{
+		Error tmp = errorsList.back();
+		if (tmp.line == line)
+		{
+			return;
+		}
+	}
+
 	setlocale(LC_ALL, "Russian");
 	switch (errorNumber)
 	{
 	case ErrorType::MISS_ID:
-		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен 'ID'.\n" });
+		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен 'ID'.\n", ErrorType::MISS_ID});
 		break;
 	case ErrorType::MISS_EQ:
-		errorsList.push_back({ line,"На месте лексемы " + token.lexeme +  " пропущен знак '='.\n" });
+		errorsList.push_back({ line,"На месте лексемы " + token.lexeme +  " пропущен знак '='.\n", ErrorType::MISS_EQ });
 		break;
 	case ErrorType::MISS_OP:
-		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен 'OPERAND'.\n" });
+		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен 'OPERAND'.\n", ErrorType::MISS_OP });
 		break;
 	case ErrorType::MISS_BR_O:
-		errorsList.push_back({ line,"Пропущен символ начала выражения '('.\n" });
+		errorsList.push_back({ line,"Пропущен символ начала выражения '('.\n", ErrorType::MISS_BR_O });
 		break;
 	case ErrorType::MISS_BR_C:
-		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен знак ')'.\n" });
+		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен знак ')'.\n", ErrorType::MISS_BR_C });
 		break;
 	case ErrorType::MISS_END_SEP:
-		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен знак ';'.\n" });
+		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен знак ';'.\n", ErrorType::MISS_END_SEP });
 		break;
 	case ErrorType::MISS_F_BR_O:
-		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен знак '{'.\n" });
+		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен знак '{'.\n", ErrorType::MISS_F_BR_O });
 		break;
 	case ErrorType::MISS_F_BR_C:
-		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен знак '}'.\n" });
+		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен знак '}'.\n", ErrorType::MISS_F_BR_C });
 		break;
 	case ErrorType::DOUBLE_UNARY:
-		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен знак '='.\n" });
+		errorsList.push_back({ line,"В выражении имеется повторный унарный оператор.\n", ErrorType::DOUBLE_UNARY });
 		break;
 	case ErrorType::EXP_START:
-		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " должно быть начало выражения 'OP'.\n" });
+		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " должно быть начало выражения 'OP'.\n", ErrorType::EXP_START });
 		break;
 	case ErrorType::EXP_MISS_OP:
-		errorsList.push_back({ line,"Неожиданный конец выражения, ожидался символ ';' или '=', или ','.\n" });
+		errorsList.push_back({ line,"Неожиданный конец выражения, ожидался символ ';' или '=', или ','.\n", ErrorType::EXP_MISS_OP });
 		break;
 	case ErrorType::FOR_MISS_START:
-		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " должно быть начало выражения.\n" });
+		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " должно быть начало выражения.\n", ErrorType::FOR_MISS_START });
 		break;
 	case ErrorType::EXP_MISS_OP_LIST:
-		errorsList.push_back({ line,"Ожидался 'ID' после символа ',' .\n" });
+		errorsList.push_back({ line,"Ожидался 'ID' после символа ',' .\n", ErrorType::EXP_MISS_OP_LIST });
 		break;
 	case ErrorType::EXP_MISS_INIT_ARG:
-		errorsList.push_back({ line,"После '=' ожидался аргумент 'ID' или 'DIGIT' .\n" });
+		errorsList.push_back({ line,"После '=' ожидался аргумент 'ID' или 'DIGIT' .\n", ErrorType::EXP_MISS_INIT_ARG });
 		break;
 	case ErrorType::EXP_MISS_NEXT_ARG:
-		errorsList.push_back({ line,"После 'operand' ожидался символ ';' или ','.\n" });
+		errorsList.push_back({ line,"После 'operand' ожидался символ ';' или ','.\n", ErrorType::EXP_MISS_NEXT_ARG });
 		break;
 	case ErrorType::MISS_START_EXP:
-		errorsList.push_back({ line,"Пропущено начало выражения после '('.\n" });
+		errorsList.push_back({ line,"Пропущено начало выражения после '('.\n", ErrorType::MISS_START_EXP });
+		break;
+	case ErrorType::MISS_WHAT_EXP:
+		errorsList.push_back({ line,"Пропущено продолжение выражения. Должно иметь вид: (expression).\n", ErrorType::MISS_WHAT_EXP });
 		break;
 	}
 }
@@ -136,11 +148,6 @@ void Parser::statement()
 			{
 				LOG("CONSTRUCTION if (expression) - done")
 					statement();
-			}
-			else
-			{
-				createError(token.lineNumber, ErrorType::MISS_START_EXP);
-				return;
 			}
 		}
 		else
@@ -282,11 +289,6 @@ bool Parser::expression()
 			{
 				return true;
 			}
-			else
-			{
-				createError(token.lineNumber, ErrorType::EXP_START);
-				return false;
-			}
 		}
 		else
 		{
@@ -303,9 +305,14 @@ bool Parser::expression()
 		}
 		else
 		{
-			createError(token.lineNumber, ErrorType::EXP_MISS_OP);
+			createError(token.lineNumber, ErrorType::MISS_WHAT_EXP);
 			return false;
 		}
+	}
+	else if (prevToken.lexeme == "(")
+	{
+		createError(token.lineNumber, ErrorType::MISS_START_EXP);
+		return false;
 	}
 
 	return false;
@@ -438,7 +445,6 @@ bool Parser::what_expression()
 		}
 		else 
 		{
-			createError(token.lineNumber, ErrorType::MISS_OP);
 			return false;
 		}
 	}
@@ -450,7 +456,6 @@ bool Parser::what_expression()
 		}
 		else
 		{
-			createError(token.lineNumber, ErrorType::MISS_OP);
 			return false;
 		}
 	}
@@ -462,7 +467,6 @@ bool Parser::what_expression()
 		}
 		else
 		{
-			createError(token.lineNumber, ErrorType::MISS_OP);
 			return false;
 		}
 	}

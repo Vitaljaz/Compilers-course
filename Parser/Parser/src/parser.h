@@ -9,6 +9,7 @@ struct Error
 {
 	unsigned line;
 	std::string errorMessage;
+	ErrorType errorType;
 };
 
 enum class ErrorType : int
@@ -18,6 +19,7 @@ enum class ErrorType : int
 	MISS_OP, // int float id
 	MISS_BR_O,
 	MISS_BR_C,
+	MISS_WHAT_EXP,
 	MISS_START_EXP,
 	MISS_END_SEP,
 	MISS_F_BR_O,
