@@ -82,6 +82,7 @@ private:
 	bool what_statement_exp();
 	
 	bool for_opt();
+	bool for_opt_3();
 
 	bool end_lexeme();
 
