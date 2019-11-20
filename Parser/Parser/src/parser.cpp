@@ -86,6 +86,9 @@ void Parser::createError(unsigned line, ErrorType errorNumber)
 	case ErrorType::BAD_STAT_START:
 		errorsList.push_back({ line,"Ќа месте лексемы " + token.lexeme + " должно быть начало выражени€.\n", ErrorType::MISS_WHAT_EXP });
 		break;
+	case ErrorType::ST_EXP_MISS_OP:
+		errorsList.push_back({ line, "ѕропущен операнд в структуре выражени€.\n", ErrorType::ST_EXP_MISS_OP });
+		break;
 	}
 }
 
@@ -281,14 +284,21 @@ bool Parser::statement()
 			}
 		}
 	}
-	else if (token.tokenClass == "operand")
+	else if (token.tokenClass == "identifier")
 	{
 		if (prevToken.lexeme == ";")
 		{
 			if (statement_exp_start())
 			{
-				statement_exp();
-				return true;
+				if (statement_exp())
+				{
+					return true;
+				}
+				else
+				{
+					return false;
+				}
+				
 			}
 		}
 		else
@@ -304,8 +314,15 @@ bool Parser::statement()
 		{
 			if (statement_exp_start())
 			{
-				statement_exp();
-				return true;
+				if (statement_exp())
+					return true;
+				else
+					return false;
+			}
+			else
+			{
+				createError(token.lineNumber, ErrorType::MISS_END_SEP);
+				return false;
 			}
 		}
 	}
@@ -373,9 +390,14 @@ bool Parser::expression()
 
 bool Parser::statement_exp()
 {
+	if (token.lexeme == ";")
+		return true;
+
 	move();
 
-	if (token.tokenClass == "identifier") // operand
+
+	LOG("exp start")
+	if (token.tokenClass == "identifier" || token.tokenClass == "digit") // operand
 	{
 		if (what_statement_exp())
 		{
@@ -407,6 +429,8 @@ bool Parser::statement_exp()
 			return false;
 		}
 	}
+	createError(token.lineNumber, ErrorType::ST_EXP_MISS_OP);
+	return false;
 }
 
 bool Parser::what_statement_exp()
@@ -464,6 +488,10 @@ bool Parser::statement_exp_start()
 	move();
 	
 	if (token.lexeme == "=")
+	{
+		return true;
+	}
+	else if (token.lexeme == ";")
 	{
 		return true;
 	}
