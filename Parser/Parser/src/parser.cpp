@@ -224,7 +224,6 @@ bool Parser::statement()
 	{
 		if (end_lexeme())
 		{
-			LOG("break; - good lexeme")
 				return true;
 		}
 		else
