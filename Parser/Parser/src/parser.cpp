@@ -163,6 +163,7 @@ bool Parser::statement()
 				LOG("CONSTRUCTION if (expression) - done")
 					if (statement())
 					{
+						// add else
 						return true;
 					}
 					else
@@ -201,15 +202,14 @@ bool Parser::statement()
 		{
 			if (expression())
 			{
-				LOG("CONSTRUCTION if (expression) - done")
 					if (statement())
 					{
-							LOG("123")
 						return true;
 					}
 					else
 					{
-						createError(token.lineNumber, ErrorType::BAD_STAT_START);
+						LOG("123")
+							createError(token.lineNumber, ErrorType::BAD_STAT_START);
 						return false;
 					}
 			}
