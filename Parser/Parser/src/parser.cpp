@@ -290,7 +290,7 @@ bool Parser::statement()
 	}
 	else if (token.tokenClass == "identifier")
 	{
-		if (prevToken.lexeme == ";")
+		if (prevToken.lexeme == ";" || prevToken.lexeme == "}" || prevToken.lexeme == "{")
 		{
 			if (statement_exp_start())
 			{
@@ -395,9 +395,9 @@ bool Parser::expression()
 			return false; 
 		}
 	}
-	else if (token.tokenClass == "identifier") // need operand
+	else if (token.tokenClass == "identifier" || token.tokenClass == "digit"
+			|| token.lexeme == "true" || token.lexeme == "false") // need operand
 	{
-		LOG("ID")
 		if (what_expression())
 		{
 			return true;
@@ -424,7 +424,8 @@ bool Parser::statement_exp()
 
 	move();
 
-	if (token.tokenClass == "identifier" || token.tokenClass == "digit") // operand
+	if (token.tokenClass == "identifier" || token.tokenClass == "digit"
+		|| token.lexeme == "true" || token.lexeme == "false") // operand
 	{
 		if (what_statement_exp())
 		{
