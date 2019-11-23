@@ -55,7 +55,7 @@ private:
 	Token token;
 
 	bool lastSign = false;
-	bool first = false;
+	bool needMove = false;
 
 	bool forthird = false;
 
@@ -85,10 +85,6 @@ private:
 	bool what_statement_exp();
 	
 	bool for_opt();
-	bool for_opt_3();
-
-	bool for_var_decl();
-	bool for_var_statment();
 
 	bool end_lexeme();
 

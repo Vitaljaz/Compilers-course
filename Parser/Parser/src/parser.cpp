@@ -21,9 +21,7 @@ void Parser::createError(unsigned line, ErrorType errorNumber)
 	{
 		Error tmp = errorsList.back();
 		if (tmp.line == line)
-		{
 			return;
-		}
 	}
 
 	setlocale(LC_ALL, "Russian");
@@ -97,7 +95,6 @@ void Parser::createError(unsigned line, ErrorType errorNumber)
 
 void Parser::getLexems()
 {
-	lexer.printLexemList();
 	tokenList = lexer.getTokenList();
 }
 
@@ -120,15 +117,10 @@ void Parser::statements()
 	errorsList.clear();
 
 	while (!tokenList.empty())
-	{
-		LOG("next " + prevToken.lexeme)
-		statement();
-	}
+			statement();
 
 	if (!checkBrackets())
-	{
 		createError(prevToken.lineNumber, ErrorType::BR_MISS_PAIR);
-	}
 
 	if (errorsList.empty())
 	{
@@ -138,25 +130,21 @@ void Parser::statements()
 	{
 		std::cout << "NO! Errors:\n";
 		for (auto& it : errorsList)
-		{
 			std::cout << "[Line " << it.line << "]: " << it.errorMessage;
-		}
 	}
 }
 
 bool Parser::statement()
 {
-	if (first)
+	if (needMove)
 		move();
 
-	first = true;
+	needMove = true;
 
 	if (token.tokenClass == "type")
 	{
 		if (local_var())
-		{
 			return true;
-		}
 	}
 	else if (token.lexeme == "if")
 	{
@@ -164,17 +152,15 @@ bool Parser::statement()
 		{
 			if (expression())
 			{
-				LOG("CONSTRUCTION if (expression) - done")
-					if (statement())
-					{
-						LOG("GOOD" + prevToken.lexeme)
-						return true;
-					}
-					else
-					{
-						createError(token.lineNumber, ErrorType::BAD_STAT_START);
-						return false;
-					}
+				if (statement())
+				{
+					return true;
+				}
+				else
+				{
+					createError(token.lineNumber, ErrorType::BAD_STAT_START);
+					return false;
+				}
 			}
 		}
 		else
@@ -189,14 +175,11 @@ bool Parser::statement()
 		{
 			if (for_opt())
 			{
-				LOG("FOR1 GOOD")
 				if (for_opt())
 				{
-					LOG("FOR2 GOOD")
 					forthird = true;
 					if (for_opt())
 					{
-						LOG("FOR3 GOOD")
 						forthird = false;
 						if (statement())
 						{
@@ -204,8 +187,7 @@ bool Parser::statement()
 						}
 						else
 						{
-							LOG("123")
-								createError(token.lineNumber, ErrorType::BAD_STAT_START);
+							createError(token.lineNumber, ErrorType::BAD_STAT_START);
 							return false;
 						}
 					}
@@ -213,12 +195,13 @@ bool Parser::statement()
 			}
 			else
 			{
-				LOG("BAD + " + prevToken.lexeme)
+				return false;
 			}
 		}
 		else
 		{
 			createError(token.lineNumber, ErrorType::MISS_BR_O);
+			return false;
 		}
 	}
 	else if (token.lexeme == "while")
@@ -233,8 +216,7 @@ bool Parser::statement()
 					}
 					else
 					{
-						LOG("123")
-							createError(token.lineNumber, ErrorType::BAD_STAT_START);
+						createError(token.lineNumber, ErrorType::BAD_STAT_START);
 						return false;
 					}
 			}
@@ -261,8 +243,7 @@ bool Parser::statement()
 	{
 		if (end_lexeme())
 		{
-			LOG("continue; - good lexeme")
-				return true;
+			return true;
 		}
 		else
 		{
@@ -276,16 +257,11 @@ bool Parser::statement()
 	}
 	else if (token.lexeme == "{")
 	{
-		LOG("{")
 		bracketsList.push(Brackets::O_BR);
 		if (statement())
-		{
 			return true;
-		}
 		else
-		{
 			return false;
-		}
 	}
 	else if (token.lexeme == "}")
 	{
@@ -296,7 +272,7 @@ bool Parser::statement()
 		}
 		if (bracketsList.empty())
 		{
-			createError(token.lineNumber, ErrorType::BR_MISS_PAIR); // not find pair for bracket
+			createError(token.lineNumber, ErrorType::BR_MISS_PAIR);
 		}
 		else
 		{
@@ -319,14 +295,9 @@ bool Parser::statement()
 			if (statement_exp_start())
 			{
 				if (statement_exp())
-				{
 					return true;
-				}
 				else
-				{
 					return false;
-				}
-				
 			}
 		}
 		else
@@ -337,7 +308,6 @@ bool Parser::statement()
 	}
 	else if (token.lexeme == "else")
 	{
-		LOG("else come")
 		if (prevToken.lexeme == "}")
 		{
 			if (statement())
@@ -349,7 +319,6 @@ bool Parser::statement()
 				createError(token.lineNumber, ErrorType::ERR_MISS_START);
 				return false;
 			}
-			
 		}
 		else
 		{
@@ -380,7 +349,6 @@ bool Parser::statement()
 	{
 		if (!tokenList.empty())
 		{
-			LOG("ERROR + " + token.lexeme)
 			createError(token.lineNumber, ErrorType::ERR_MISS_START);
 			return false;
 		}
@@ -391,8 +359,6 @@ bool Parser::statement()
 bool Parser::for_opt()
 {
 	move();
-	LOG("FOR OPT LEXEME : " + token.lexeme)
-
 	if (token.tokenClass == "type")
 	{
 		if (local_var())
@@ -400,27 +366,17 @@ bool Parser::for_opt()
 	}
 	else if (token.tokenClass == "identifier")
 	{
-		LOG("ID COME")
 		move();
 		if (token.lexeme == "=")
 		{
 			if (statement_exp())
-			{
 				return true;
-				LOG("ST_EXP_FOR_GOOD")
-			}
 		}
 	}
 
 	createError(token.lineNumber, ErrorType::FOR_MISS_START);
 	return false;
 }
-
-bool Parser::for_var_decl()
-{
-	move();
-}
-
 
 bool Parser::expression()
 {
@@ -431,14 +387,12 @@ bool Parser::expression()
 		if (prevToken.tokenClass != "unary operator")
 		{
 			if (expression())
-			{
 				return true;
-			}
 		}
 		else
 		{
 			createError(token.lineNumber, ErrorType::DOUBLE_UNARY);
-			return false; // error
+			return false; 
 		}
 	}
 	else if (token.tokenClass == "identifier") // need operand
@@ -470,7 +424,6 @@ bool Parser::statement_exp()
 
 	move();
 
-	LOG("exp start " + token.lexeme)
 	if (token.tokenClass == "identifier" || token.tokenClass == "digit") // operand
 	{
 		if (what_statement_exp())
@@ -510,21 +463,17 @@ bool Parser::statement_exp()
 bool Parser::what_statement_exp()
 {
 	move();
-
-	LOG("FOR 3 : " + token.lexeme)
 	if (token.tokenClass == "logical operator")
 	{
-		LOG("&&")
-			if (statement_exp())
-			{
-				LOG("EXP")
-					return true;
-			}
-			else
-			{
-				createError(token.lineNumber, ErrorType::MISS_OP);
-				return false;
-			}
+		if (statement_exp())
+		{
+			return true;
+		}
+		else
+		{
+			createError(token.lineNumber, ErrorType::MISS_OP);
+			return false;
+		}
 	}
 	else if (token.tokenClass == "relational operator")
 	{
@@ -567,13 +516,9 @@ bool Parser::statement_exp_start()
 	move();
 	
 	if (token.lexeme == "=")
-	{
 		return true;
-	}
 	else if (token.lexeme == ";")
-	{
 		return true;
-	}
 
 	createError(token.lineNumber, ErrorType::MISS_EQ);
 	return false;
@@ -584,9 +529,7 @@ bool Parser::statement_id_exp()
 	move();
 
 	if (token.tokenClass == "identifier")
-	{
 		return true;
-	}
 
 	return false;
 }
@@ -597,38 +540,24 @@ bool Parser::what_expression()
 	
 	if (token.tokenClass == "logical operator")
 	{
-		LOG("&&")
 		if (expression())
-		{
-			LOG("EXP")
 			return true;
-		}
 		else 
-		{
 			return false;
-		}
 	}
 	else if (token.tokenClass == "relational operator")
 	{
 		if (expression())
-		{
 			return true;
-		}
 		else
-		{
 			return false;
-		}
 	}
 	else if (token.tokenClass == "arithmetic operator")
 	{
 		if (expression())
-		{
 			return true;
-		}
 		else
-		{
 			return false;
-		}
 	}
 	else if (token.lexeme == ")")
 	{
@@ -643,13 +572,10 @@ bool Parser::local_var()
 	move();
 	if (token.tokenClass == "identifier")
 	{
-		LOG("identifier")
 		if (forthird)
 		{
-			LOG ("FOR3 CHECK END")
 			if (br_close())
 			{
-				LOG("BRC )")
 				return true;
 			}
 			else
@@ -662,25 +588,21 @@ bool Parser::local_var()
 
 		if (local_var_end())
 		{
-			LOG("type identifier ;")
 			return true;
 		}
 		else if (local_var_init())
 		{
-			LOG("INIT")
 			move();
 			if (token.tokenClass == "digit" || token.tokenClass == "identifier")
 			{
 				move();
 				if (local_var_end())
 				{
-					LOG("type identifier = op ;")
-						return true;
+					return true;
 				}
 				else if (local_var_list())
 				{
-					LOG("type identifier = op ,")
-						local_var();
+					local_var();
 					return true;
 				}
 				else
@@ -698,13 +620,9 @@ bool Parser::local_var()
 		else if (local_var_list())
 		{
 			if (local_var())
-			{
 				return true;
-			}
 			else
-			{
 				return false;
-			}
 		}
 		else
 		{
@@ -720,9 +638,7 @@ bool Parser::local_var()
 bool Parser::local_var_end()
 {
 	if (token.lexeme == ";")
-	{
 		return true;
-	}
 
 	return false;
 }
@@ -730,18 +646,16 @@ bool Parser::local_var_end()
 bool Parser::local_var_init()
 {
 	if (token.lexeme == "=")
-	{
 		return true;
-	}
+
 	return false;
 }
 
 bool Parser::local_var_list()
 {
 	if (token.lexeme == ",")
-	{
 		return true;
-	}
+
 	return false;
 }
 
