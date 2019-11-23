@@ -57,6 +57,8 @@ private:
 	bool lastSign = false;
 	bool first = false;
 
+	bool forthird = false;
+
 	std::vector<Token> tokenList;
 	std::vector<Error> errorsList;
 
@@ -84,6 +86,9 @@ private:
 	
 	bool for_opt();
 	bool for_opt_3();
+
+	bool for_var_decl();
+	bool for_var_statment();
 
 	bool end_lexeme();
 

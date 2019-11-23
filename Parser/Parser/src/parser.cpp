@@ -189,10 +189,22 @@ bool Parser::statement()
 		{
 			if (for_opt())
 			{
+				LOG("FOR1 GOOD")
+				if (for_opt())
+				{
+					LOG("FOR2 GOOD")
+					forthird = true;
+					if (for_opt())
+					{
+						LOG("FOR3 GOOD")
+						forthird = false;
+						return true;
+					}
+				}
 			}
 			else
 			{
-
+				LOG("BAD + " + prevToken.lexeme)
 			}
 		}
 		else
@@ -370,20 +382,36 @@ bool Parser::statement()
 bool Parser::for_opt()
 {
 	move();
+	LOG("FOR OPT LEXEME : " + token.lexeme)
 
-	if (local_var())
+	if (token.tokenClass == "type")
 	{
-		return true;
+		if (local_var())
+			return true;
 	}
-	else if (statement_exp_start())
+	else if (token.tokenClass == "identifier")
 	{
-		statement_exp();
-		return true;
+		LOG("ID COME")
+		move();
+		if (token.lexeme == "=")
+		{
+			if (statement_exp())
+			{
+				return true;
+				LOG("ST_EXP_FOR_GOOD")
+			}
+		}
 	}
 
 	createError(token.lineNumber, ErrorType::FOR_MISS_START);
 	return false;
 }
+
+bool Parser::for_var_decl()
+{
+	move();
+}
+
 
 bool Parser::expression()
 {
@@ -431,10 +459,19 @@ bool Parser::statement_exp()
 	if (token.lexeme == ";")
 		return true;
 
-	move();
+	if (forthird)
+	{
+		if (br_close())
+		{
+			return true;
+		}
+	}
+	else
+	{
+		move();
+	}
 
-
-	LOG("exp start")
+	LOG("exp start " + token.lexeme)
 	if (token.tokenClass == "identifier" || token.tokenClass == "digit") // operand
 	{
 		if (what_statement_exp())
@@ -475,6 +512,7 @@ bool Parser::what_statement_exp()
 {
 	move();
 
+	LOG("FOR 3 : " + token.lexeme)
 	if (token.tokenClass == "logical operator")
 	{
 		LOG("&&")
@@ -514,6 +552,10 @@ bool Parser::what_statement_exp()
 		}
 	}
 	else if (token.lexeme == ";")
+	{
+		return true;
+	}
+	else if (token.lexeme == ")")
 	{
 		return true;
 	}
@@ -602,8 +644,23 @@ bool Parser::local_var()
 	move();
 	if (token.tokenClass == "identifier")
 	{
-		move();
 		LOG("identifier")
+		if (forthird)
+		{
+			LOG ("FOR3 CHECK END")
+			if (br_close())
+			{
+				LOG("BRC )")
+				return true;
+			}
+			else
+			{
+				token = prevToken;
+			}
+		}
+
+		move();
+
 		if (local_var_end())
 		{
 			LOG("type identifier ;")
