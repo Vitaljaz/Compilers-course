@@ -29,6 +29,9 @@ void Parser::createError(unsigned line, ErrorType errorNumber)
 	setlocale(LC_ALL, "Russian");
 	switch (errorNumber)
 	{
+	case ErrorType::ERR_MISS_START:
+		errorsList.push_back({ line,"Ошибка начала выражения.\n", ErrorType::ERR_MISS_START });
+		break;
 	case ErrorType::MISS_ID:
 		errorsList.push_back({ line,"На месте лексемы " + token.lexeme + " пропущен 'ID'.\n", ErrorType::MISS_ID});
 		break;
@@ -118,6 +121,7 @@ void Parser::statements()
 
 	while (!tokenList.empty())
 	{
+		LOG("next " + prevToken.lexeme)
 		statement();
 	}
 
@@ -163,7 +167,7 @@ bool Parser::statement()
 				LOG("CONSTRUCTION if (expression) - done")
 					if (statement())
 					{
-						// add else
+						LOG("GOOD" + prevToken.lexeme)
 						return true;
 					}
 					else
@@ -264,6 +268,11 @@ bool Parser::statement()
 	}
 	else if (token.lexeme == "}")
 	{
+		if (prevToken.lexeme == ")")
+		{
+			createError(token.lineNumber, ErrorType::ERR_MISS_START);
+			return false;
+		}
 		if (bracketsList.empty())
 		{
 			createError(token.lineNumber, ErrorType::BR_MISS_PAIR); // not find pair for bracket
@@ -272,7 +281,6 @@ bool Parser::statement()
 		{
 			if (bracketsList.top() == Brackets::O_BR)
 			{
-				LOG("{ statement } - done")
 				bracketsList.pop();
 				return true;
 			}
@@ -306,6 +314,28 @@ bool Parser::statement()
 			return false;
 		}
 	}
+	else if (token.lexeme == "else")
+	{
+		LOG("else come")
+		if (prevToken.lexeme == "}")
+		{
+			if (statement())
+			{
+				return true;
+			}
+			else
+			{
+				createError(token.lineNumber, ErrorType::ERR_MISS_START);
+				return false;
+			}
+			
+		}
+		else
+		{
+			createError(token.lineNumber, ErrorType::MISS_F_BR_C);
+			return false;
+		}
+	}
 	else if (prevToken.lexeme == ";" && token.tokenClass == "unary operator")
 	{
 		move();
@@ -323,6 +353,15 @@ bool Parser::statement()
 				createError(token.lineNumber, ErrorType::MISS_END_SEP);
 				return false;
 			}
+		}
+	}
+	else if (prevToken.lexeme != ";" || prevToken.lexeme != "}")
+	{
+		if (!tokenList.empty())
+		{
+			LOG("ERROR + " + token.lexeme)
+			createError(token.lineNumber, ErrorType::ERR_MISS_START);
+			return false;
 		}
 	}
 	return false;

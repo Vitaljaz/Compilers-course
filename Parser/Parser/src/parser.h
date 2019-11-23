@@ -27,6 +27,7 @@ enum class ErrorType : int
 	FOR_MISS_START,
 	BR_MISS_PAIR,
 	BAD_STAT_START,
+	ERR_MISS_START,
 };
 
 struct Error
