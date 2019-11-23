@@ -198,7 +198,16 @@ bool Parser::statement()
 					{
 						LOG("FOR3 GOOD")
 						forthird = false;
-						return true;
+						if (statement())
+						{
+							return true;
+						}
+						else
+						{
+							LOG("123")
+								createError(token.lineNumber, ErrorType::BAD_STAT_START);
+							return false;
+						}
 					}
 				}
 			}
@@ -459,17 +468,7 @@ bool Parser::statement_exp()
 	if (token.lexeme == ";")
 		return true;
 
-	if (forthird)
-	{
-		if (br_close())
-		{
-			return true;
-		}
-	}
-	else
-	{
-		move();
-	}
+	move();
 
 	LOG("exp start " + token.lexeme)
 	if (token.tokenClass == "identifier" || token.tokenClass == "digit") // operand
