@@ -59,6 +59,8 @@ private:
 
 	bool forthird = false;
 
+	std::ofstream asmOut;
+
 	std::vector<Token> tokenList;
 	std::vector<Error> errorsList;
 

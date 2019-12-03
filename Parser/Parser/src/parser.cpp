@@ -6,11 +6,13 @@
 Parser::Parser(const std::string & fileName_)
 {
 	lexer = Lexer(fileName_);
+	asmOut.open("asm_output.txt");
 }
 
 void Parser::run()
 {
 	getLexems();
+	lexer.printLexemList();
 	token = tokenList.front();
 	statements();
 }
@@ -101,9 +103,9 @@ void Parser::getLexems()
 void Parser::move()
 {
 	prevToken = token;
+	tokenList.erase(tokenList.begin());
 	if (!tokenList.empty())
 	{
-		tokenList.erase(tokenList.begin());
 		token = tokenList.front();
 	}
 	else
@@ -272,7 +274,11 @@ bool Parser::statement()
 		}
 		if (bracketsList.empty())
 		{
+			if (tokenList.size() == 0)
+				return false;
+
 			createError(token.lineNumber, ErrorType::BR_MISS_PAIR);
+			return false;
 		}
 		else
 		{
