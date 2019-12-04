@@ -12,6 +12,7 @@ Parser::Parser(const std::string & fileName_)
 void Parser::run()
 {
 	getLexems();
+	prevToken.st = SymbolType::NONE;
 	lexer.printLexemList();
 	token = tokenList.front();
 	statements();
@@ -127,12 +128,14 @@ void Parser::statements()
 	if (errorsList.empty())
 	{
 		std::cout << "OK! Good grammar!\n";
+		asmOut.close();
 	}
 	else
 	{
 		std::cout << "NO! Errors:\n";
 		for (auto& it : errorsList)
 			std::cout << "[Line " << it.line << "]: " << it.errorMessage;
+		asmOut.close();
 	}
 }
 
@@ -298,12 +301,17 @@ bool Parser::statement()
 	{
 		if (prevToken.lexeme == ";" || prevToken.lexeme == "}" || prevToken.lexeme == "{")
 		{
+			lastId = token;
 			if (statement_exp_start())
 			{
 				if (statement_exp())
+				{
 					return true;
+				}
 				else
+				{
 					return false;
+				}
 			}
 		}
 		else
@@ -332,13 +340,19 @@ bool Parser::statement()
 			return false;
 		}
 	}
-	else if (prevToken.lexeme == ";" && token.tokenClass == "unary operator")
+	else if ((prevToken.lexeme == ";" || prevToken.lexeme == "}" || prevToken.lexeme == "{") && token.tokenClass == "unary operator")
 	{
+		lastOperator = token;
 		move();
 		if (token.tokenClass == "identifier")
 		{
 			if (statement_exp_start())
 			{
+				if (token.lexeme == ";")
+				{
+					createUnary();
+				}
+
 				if (statement_exp())
 					return true;
 				else
@@ -433,6 +447,7 @@ bool Parser::statement_exp()
 	if (token.tokenClass == "identifier" || token.tokenClass == "digit"
 		|| token.lexeme == "true" || token.lexeme == "false") // operand
 	{
+		lastDigit = token;
 		if (what_statement_exp())
 		{
 			return true;
@@ -508,6 +523,7 @@ bool Parser::what_statement_exp()
 	}
 	else if (token.lexeme == ";")
 	{
+		createEqual();
 		return true;
 	}
 	else if (token.lexeme == ")")
@@ -529,7 +545,7 @@ bool Parser::statement_exp_start()
 
 	createError(token.lineNumber, ErrorType::MISS_EQ);
 	return false;
-}
+} // check = or ;
 
 bool Parser::statement_id_exp()
 {
@@ -579,6 +595,9 @@ bool Parser::local_var()
 	move();
 	if (token.tokenClass == "identifier")
 	{
+		LOG("Come to local var")
+		lastId = token;
+
 		if (forthird)
 		{
 			if (br_close())
@@ -595,6 +614,7 @@ bool Parser::local_var()
 
 		if (local_var_end())
 		{
+			createInitVar(0);
 			return true;
 		}
 		else if (local_var_init())
@@ -602,9 +622,12 @@ bool Parser::local_var()
 			move();
 			if (token.tokenClass == "digit" || token.tokenClass == "identifier")
 			{
+				lastDigit = token;
+
 				move();
 				if (local_var_end())
 				{
+					createInitVar();
 					return true;
 				}
 				else if (local_var_list())
@@ -702,4 +725,54 @@ bool Parser::checkBrackets()
 		return true;
 
 	return false;
+}
+
+// asm
+
+void Parser::createInitVar(int digit)
+{
+	asmOut << "\n#create var:\n";
+	if (digit == 0)
+	{
+		asmOut << "mov " << lastId.lexeme << ", " << 0 << "\n";
+	}
+	else
+	{
+		asmOut << "mov " << lastId.lexeme << ", " << lastDigit.lexeme << "\n";
+	}
+}
+
+void Parser::createEqual()
+{
+	asmOut << "\n#equal exp:\n";
+	if (lastDigit.tokenClass == "identifier")
+	{
+		asmOut << "mov " << "eax, " << lastDigit.lexeme << "\n";
+		asmOut << "mov " << lastId.lexeme << ", eax\n";
+	}
+	else
+	{
+		asmOut << "mov " << lastId.lexeme << ", " << lastDigit.lexeme << "\n";
+	}
+}
+
+void Parser::createUnary()
+{
+	asmOut << "\n#unary exp:\n";
+	asmOut << "mov eax, " << lastId.lexeme << "\n";
+	
+	if (lastOperator.lexeme == "++")
+	{
+		asmOut << "add eax, 1\n";
+	}
+	else if (lastOperator.lexeme == "--")
+	{
+		asmOut << "sub eax, 1\n";
+	}
+	else if (lastOperator.lexeme == "!")
+	{
+		asmOut << "add eax, not\n"; // ???
+	}
+
+	asmOut << "mov " << lastId.lexeme << ", eax\n";
 }

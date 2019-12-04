@@ -51,6 +51,10 @@ public:
 	void run();
 	
 private:
+	Token lastId;
+	Token lastDigit;
+	Token lastOperator;
+
 	Token prevToken;
 	Token token;
 
@@ -65,6 +69,15 @@ private:
 	std::vector<Error> errorsList;
 
 	std::stack<Brackets> bracketsList;
+
+	// asm 
+	std::map<std::string, int> regID;
+	int regCounter;
+
+	void createInitVar(int digit = 1);
+	void createEqual();
+	void createUnary();
+	//
 
 	void createError(unsigned line, ErrorType errorNumber);
 	void getLexems();
