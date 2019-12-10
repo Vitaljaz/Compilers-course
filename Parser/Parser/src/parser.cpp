@@ -153,10 +153,12 @@ bool Parser::statement()
 	}
 	else if (token.lexeme == "if")
 	{
+		constructions.push(1);
 		if (br_open())
 		{
 			if (expression())
 			{
+				createCompareIf();
 				if (statement())
 				{
 					return true;
@@ -180,8 +182,12 @@ bool Parser::statement()
 		{
 			if (for_opt())
 			{
+				forLevel = 1;
+				createForJump();
 				if (for_opt())
 				{
+					forLevel = 2;
+					createForLabel();
 					forthird = true;
 					if (for_opt())
 					{
@@ -270,6 +276,11 @@ bool Parser::statement()
 	}
 	else if (token.lexeme == "}")
 	{
+		if (!constructions.empty())
+		{
+			createLabel();
+			constructions.pop();
+		}
 		if (prevToken.lexeme == ")")
 		{
 			createError(token.lineNumber, ErrorType::ERR_MISS_START);
@@ -302,8 +313,10 @@ bool Parser::statement()
 		if (prevToken.lexeme == ";" || prevToken.lexeme == "}" || prevToken.lexeme == "{")
 		{
 			lastId = token;
+			expressionTokens.push_back(token);
 			if (statement_exp_start())
 			{
+				expressionTokens.push_back(token);
 				if (statement_exp())
 				{
 					return true;
@@ -346,11 +359,13 @@ bool Parser::statement()
 		move();
 		if (token.tokenClass == "identifier")
 		{
+			expressionTokens.push_back(token);
 			if (statement_exp_start())
 			{
-				if (token.lexeme == ";")
+				createUnary();
+				if (token.lexeme == "=")
 				{
-					createUnary();
+					expressionTokens.push_back(token);
 				}
 
 				if (statement_exp())
@@ -398,6 +413,57 @@ bool Parser::for_opt()
 	return false;
 }
 
+
+bool Parser::for_2()
+{
+	move();
+
+	if (token.tokenClass == "identifier")
+	{
+		for2.push_back(token);
+		move();
+		if (token.tokenClass == "relational operator")
+		{
+			for2.push_back(token);
+			move();
+			if (token.tokenClass == "identifier" || token.tokenClass == "digit")
+			{
+				for2.push_back(token);
+				move();
+				if (token.lexeme == ";")
+				{
+					return true;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
+bool Parser::for_3()
+{
+	move();
+
+	if (token.tokenClass == "unary operator")
+	{
+		for3.push_back(token);
+		move();
+		if (token.tokenClass == "identifier")
+		{
+			for3.push_back(token);
+			move();
+			if (token.lexeme == ")")
+			{
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+
 bool Parser::expression()
 {
 	move();
@@ -418,6 +484,7 @@ bool Parser::expression()
 	else if (token.tokenClass == "identifier" || token.tokenClass == "digit"
 			|| token.lexeme == "true" || token.lexeme == "false") // need operand
 	{
+		expressionTokens.push_back(token);
 		if (what_expression())
 		{
 			return true;
@@ -440,13 +507,25 @@ bool Parser::expression()
 bool Parser::statement_exp()
 {
 	if (token.lexeme == ";")
+	{
+		if (!expressionTokens.empty())
+		{
+			createStatement();
+		}
 		return true;
+	}
 
 	move();
 
 	if (token.tokenClass == "identifier" || token.tokenClass == "digit"
 		|| token.lexeme == "true" || token.lexeme == "false") // operand
 	{
+		if (lastOperator.tokenClass == "unary operator")
+		{
+			createUnary();
+		}
+
+		expressionTokens.push_back(token);
 		lastDigit = token;
 		if (what_statement_exp())
 		{
@@ -487,6 +566,7 @@ bool Parser::what_statement_exp()
 	move();
 	if (token.tokenClass == "logical operator")
 	{
+		expressionTokens.push_back(token);
 		if (statement_exp())
 		{
 			return true;
@@ -499,6 +579,7 @@ bool Parser::what_statement_exp()
 	}
 	else if (token.tokenClass == "relational operator")
 	{
+		expressionTokens.push_back(token);
 		if (statement_exp())
 		{
 			return true;
@@ -511,6 +592,7 @@ bool Parser::what_statement_exp()
 	}
 	else if (token.tokenClass == "arithmetic operator")
 	{
+		expressionTokens.push_back(token);
 		if (statement_exp())
 		{
 			return true;
@@ -523,7 +605,14 @@ bool Parser::what_statement_exp()
 	}
 	else if (token.lexeme == ";")
 	{
-		createEqual();
+		if (expressionTokens.size() == 3)
+		{
+			createEqual();
+		}
+		else
+		{
+			createStatement();
+		}
 		return true;
 	}
 	else if (token.lexeme == ")")
@@ -563,6 +652,7 @@ bool Parser::what_expression()
 	
 	if (token.tokenClass == "logical operator")
 	{
+		expressionTokens.push_back(token);
 		if (expression())
 			return true;
 		else 
@@ -570,6 +660,7 @@ bool Parser::what_expression()
 	}
 	else if (token.tokenClass == "relational operator")
 	{
+		expressionTokens.push_back(token);
 		if (expression())
 			return true;
 		else
@@ -577,6 +668,7 @@ bool Parser::what_expression()
 	}
 	else if (token.tokenClass == "arithmetic operator")
 	{
+		expressionTokens.push_back(token);
 		if (expression())
 			return true;
 		else
@@ -632,6 +724,7 @@ bool Parser::local_var()
 				}
 				else if (local_var_list())
 				{
+					createInitVar();
 					local_var();
 					return true;
 				}
@@ -649,6 +742,8 @@ bool Parser::local_var()
 		}
 		else if (local_var_list())
 		{
+			createInitVar(0);
+
 			if (local_var())
 				return true;
 			else
@@ -728,6 +823,88 @@ bool Parser::checkBrackets()
 }
 
 // asm
+void Parser::createForJump()
+{
+	if (forLevel == 1)
+	{
+		asmOut << "jmp $FOR_LABEL" << forLabelCounter + 3 << ":\n";
+		forLabelCounter++;
+	}
+	else if (forLevel == 2)
+	{
+		asmOut << "jmp $FOR_LABEL" << forLabelCounter + 1 << ":\n";
+		forLabelCounter++;
+	}
+}
+
+void Parser::createForLabel()
+{
+	if (forLevel == 2)
+	{
+		std::cout << forLabelCounter;
+		asmOut << "$FOR_LABEL" << forLabelCounter  << ":\n";
+	}
+}
+
+void Parser::createStatement()
+{
+	Token main = expressionTokens.front();
+	expressionTokens.erase(expressionTokens.begin());
+
+	Token eq = expressionTokens.front();
+	expressionTokens.erase(expressionTokens.begin());
+
+	std::cout << main.lexeme << "  " << eq.lexeme << std::endl;
+
+	if (eq.lexeme == "=" && main.tokenClass == "identifier")
+	{
+		asmOut << "\n#create statement:\n";
+		asmOut << "mov " << "eax" << ", [";
+
+		for (auto& i : expressionTokens)
+			asmOut << " " << i.lexeme << " ";
+
+		asmOut << "]\n";
+		asmOut << "mov " << main.lexeme << ", " << "eax" << "\n";
+	}
+
+	expressionTokens.clear();
+}
+
+void Parser::createCompareIf()
+{
+	Token op1 = expressionTokens.front();
+	expressionTokens.erase(expressionTokens.begin());
+	Token sign = expressionTokens.front();
+	expressionTokens.erase(expressionTokens.begin());
+	Token op2 = expressionTokens.front();
+	expressionTokens.erase(expressionTokens.begin());
+
+	asmOut << "\n#create if cmp:\n";
+	asmOut << "cmp " << op1.lexeme << ", " << op2.lexeme << "\n";
+	if (sign.lexeme == "<")
+	{
+		asmOut << "jle " << "$LABEL" << labelCounter << "\n";
+	}
+	else if (sign.lexeme == ">")
+	{
+		asmOut << "jge " << "$LABEL" << labelCounter << "\n";
+	}
+	else if (sign.lexeme == "==")
+	{
+		asmOut << "jne " << "$LABEL" << labelCounter << "\n";
+	}
+	else if (sign.lexeme == "!=")
+	{
+		asmOut << "je " << "$LABEL" << labelCounter << "\n";
+	}
+	labelCounter++;
+}
+
+void Parser::createLabel()
+{
+	asmOut <<"$LABEL" << constructions.size() - 1 << ":\n";
+}
 
 void Parser::createInitVar(int digit)
 {

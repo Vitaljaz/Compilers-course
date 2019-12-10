@@ -72,8 +72,23 @@ private:
 
 	// asm 
 	std::map<std::string, int> regID;
-	int regCounter;
+	std::vector<Token> expressionTokens;
+	std::vector<Token> for2, for3;
+	std::stack<int> constructions;
 
+	int regCounter = 0;
+	int labelCounter = 0;
+	int forLabelCounter = 1;
+
+	int forLevel = 0;
+
+	bool for_2();
+	bool for_3();
+	void createForJump();
+	void createForLabel();
+	void createStatement();
+	void createCompareIf();
+	void createLabel();
 	void createInitVar(int digit = 1);
 	void createEqual();
 	void createUnary();
