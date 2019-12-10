@@ -75,6 +75,7 @@ private:
 	std::vector<Token> expressionTokens;
 	std::vector<Token> for2, for3;
 	std::stack<int> constructions;
+	std::vector<int> forLabels;
 
 	int regCounter = 0;
 	int labelCounter = 0;
@@ -84,6 +85,8 @@ private:
 
 	bool for_2();
 	bool for_3();
+	void createFor2Construction();
+	void createFor3Construction();
 	void createForJump();
 	void createForLabel();
 	void createStatement();

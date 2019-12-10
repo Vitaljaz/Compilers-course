@@ -182,18 +182,16 @@ bool Parser::statement()
 		{
 			if (for_opt())
 			{
-				forLevel = 1;
-				createForJump();
-				if (for_opt())
+				if (for_2())
 				{
-					forLevel = 2;
-					createForLabel();
 					forthird = true;
-					if (for_opt())
+					if (for_3())
 					{
+						createFor2Construction();
 						forthird = false;
 						if (statement())
 						{
+							createFor3Construction();
 							return true;
 						}
 						else
@@ -823,6 +821,75 @@ bool Parser::checkBrackets()
 }
 
 // asm
+
+void Parser::createFor3Construction()
+{
+	Token sg = for3.front();
+	for3.erase(for3.begin());
+	Token id = for3.front();
+	for3.erase(for3.begin());
+
+	asmOut << "\n#unary exp:\n";
+	asmOut << "mov eax, " << lastId.lexeme << "\n";
+
+	if (sg.lexeme == "++")
+	{
+		asmOut << "add eax, 1\n";
+	}
+	else if (sg.lexeme == "--")
+	{
+		asmOut << "sub eax, 1\n";
+	}
+	else if (sg.lexeme == "!")
+	{
+		asmOut << "add eax, not\n"; // ???
+	}
+
+	asmOut << "mov " << lastId.lexeme << ", eax\n";
+	asmOut << "jmp " << "$FOR_LABEL" << forLabels.back() + 1 << "\n";
+	asmOut << "$FOR_LABEL" << forLabels.back() + 3 << ":\n";
+}
+
+void Parser::createFor2Construction()
+{
+	Token op1 = for2.front();
+	for2.erase(for2.begin());
+	Token sign = for2.front();
+	for2.erase(for2.begin());
+	Token op2 = for2.front();
+	for2.erase(for2.begin());
+
+	if (forLabels.size() == 0)
+	{
+		forLabels.push_back(1);
+	}
+	else
+	{
+		forLabels.push_back(forLabels.back() + 1);
+	}
+
+	asmOut << "\n#create for cmp:\n";
+	asmOut << "$FOR_LABEL" << forLabels.back() + 1 << ":\n";
+	asmOut << "cmp " << op1.lexeme << ", " << op2.lexeme << "\n";
+	if (sign.lexeme == "<")
+	{
+		asmOut << "jle " << "$FOR_LABEL" << forLabels.back() + 3 << "\n";
+	}
+	else if (sign.lexeme == ">")
+	{
+		asmOut << "jge " << "$FOR_LABEL"  << forLabels.back() + 3 << "\n";
+	}
+	else if (sign.lexeme == "==")
+	{
+		asmOut << "jne " << "$FOR_LABEL"  << forLabels.back() + 3 << "\n";
+	}
+	else if (sign.lexeme == "!=")
+	{
+		asmOut << "je " << "$FOR_LABEL"  << forLabels.back() + 3 << "\n";
+	}
+
+}
+
 void Parser::createForJump()
 {
 	if (forLevel == 1)
